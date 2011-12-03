@@ -60,7 +60,7 @@ import replicatorg.machine.MachineToolStatusEvent;
 public class MainButtonPanel extends BGPanel implements MachineListener, ActionListener {
 
 	// / height, width of the toolbar buttons
-	static final int BUTTON_WIDTH = 27;
+	static final int BUTTON_WIDTH = 32;
 	static final int BUTTON_HEIGHT = 32;
 	
 	static final float disabledFactors[] = { 1.0f, 1.0f, 1.0f, 0.5f };
@@ -87,31 +87,32 @@ public class MainButtonPanel extends BGPanel implements MachineListener, ActionL
 			setBorder(null);
 			getModel().addChangeListener(this);
 			addActionListener(MainButtonPanel.this);
+			setOpaque(false);
 		}
 		public String getRolloverText() { return rolloverText; }
 		public void paint(Graphics g) {
 			final Rectangle b = getBounds(); 
 			if (getModel().isSelected()) {
-				g.setColor(new Color(1.0f,1.0f,0.5f,0.8f));
-				g.fillRect(0,0,b.width,b.height);
+				// g.setColor(new Color(1.0f,1.0f,0.5f,0.8f));
+				// g.fillRect(0,0,b.width,b.height);
 				getSelectedIcon().paintIcon(this,g,0,0);
 			} else if (getModel().isEnabled()) {
 				if (getModel().isPressed()) {
-					g.setColor(new Color(1.0f,1.0f,0.5f,0.3f));
+					g.setColor(new Color(1.0f,1.0f,1.0f,0.4f));
 					g.fillRect(0,0,b.width,b.height);
 					getSelectedIcon().paintIcon(this, g, 0, 0);
 				} else if (getModel().isRollover()) {
-					g.setColor(new Color(1.0f,1.0f,0.5f,0.3f));
+					g.setColor(new Color(1.0f,1.0f,1.0f,0.2f));
 					g.fillRect(0,0,b.width,b.height);
 					getRolloverIcon().paintIcon(this, g, 0, 0);
 				} else {
-					g.setColor(BACK_COLOR);
-					g.fillRect(0,0,b.width,b.height);
+					// g.setColor(BACK_COLOR);
+					// g.fillRect(0,0,b.width,b.height);
 					getIcon().paintIcon(this,g,0,0);
 				}
 			} else {
-				g.setColor(BACK_COLOR);
-				g.fillRect(0,0,b.width,b.height);
+				// g.setColor(BACK_COLOR);
+				// g.fillRect(0,0,b.width,b.height);
 				getDisabledIcon().paintIcon(this, g, 0, 0);
 			}
 		}
@@ -141,21 +142,28 @@ public class MainButtonPanel extends BGPanel implements MachineListener, ActionL
 
 	JLabel statusLabel;
 
-	final static Color BACK_COLOR = new Color(0x5F, 0x73, 0x25); 
+	final static Color BACK_COLOR = new Color(0xFF, 0xFF, 0x00); //new Color(0x5F, 0x73, 0x25); 
 	MainButton simButton, pauseButton, stopButton;
 	MainButton buildButton, resetButton, cpButton, rcButton;
 	MainButton disconnectButton, connectButton;
 	
 	MainButton uploadButton, playbackButton, fileButton;
 	
+	BufferedImage bgDisconnected, bgConnected, bgBuilding;
+	
 	public MainButtonPanel(MainWindow editor) {
-		setLayout(new MigLayout("gap 5, ins 5"));
+		setLayout(new MigLayout("gap 0, ins 2 2 0 2"));
 		this.editor = editor;
 
 		// hardcoding new blue color scheme for consistency with images,
 		// see EditorStatus.java for details.
 		// bgcolor = Preferences.getColor("buttons.bgcolor");
 		setBackground(BACK_COLOR);
+		bgDisconnected = Base.getImage("images/background-disconnected.png", this);
+		bgConnected = Base.getImage("images/background-connected.png", this);
+		bgBuilding = Base.getImage("images/background-building.png", this);
+		backgroundImg = bgDisconnected;
+		
 
 		Font statusFont = Base.getFontPref("buttons.status.font","SansSerif,plain,12");
 		Color statusColor = Base.getColorPref("buttons.status.color","#FFFFFF");
@@ -205,7 +213,7 @@ public class MainButtonPanel extends BGPanel implements MachineListener, ActionL
 		connectButton.setToolTipText("Connect to the machine.");
 		disconnectButton.setToolTipText("Disconnect from the machine.");
 
-		setPreferredSize(new Dimension(750,60));
+		setPreferredSize(new Dimension(750,40));
 		
 		// Update initial state
 		machineStateChangedInternal(new MachineStateChangeEvent(null, new MachineState(MachineState.State.NOT_ATTACHED)));
@@ -283,6 +291,19 @@ public class MainButtonPanel extends BGPanel implements MachineListener, ActionL
 			(((SDCardCapture)machine.getDriver()).hasFeatureSDCardCapture());
 		boolean hasGcode = (editor != null) && (editor.getBuild() != null) &&
 		editor.getBuild().getCode() != null;
+		
+		BufferedImage oldBgImg = backgroundImg;
+		
+		if (connected && building) {
+			backgroundImg = bgBuilding;
+		} else if (connected) {
+			backgroundImg = bgConnected;
+		} else {
+			backgroundImg = bgDisconnected;
+		}
+		
+		if (backgroundImg != oldBgImg)
+			repaint();
 		
 //		simButton.setEnabled(hasMachine && !building && hasGcode);
 		simButton.setEnabled(false);

@@ -12,6 +12,7 @@ import java.awt.event.KeyListener;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelListener;
+import javax.swing.BorderFactory;
 import java.util.Random;
 import java.util.logging.Level;
 
@@ -56,6 +57,7 @@ import replicatorg.machine.MachineInterface;
 import replicatorg.machine.model.BuildVolume;
 import replicatorg.machine.model.MachineModel;
 import replicatorg.model.BuildModel;
+import replicatorg.app.ui.BGPanel;
 
 import com.sun.j3d.utils.universe.SimpleUniverse;
 
@@ -132,7 +134,9 @@ public class PreviewPanel extends JPanel {
 		TRANSLATE_OBJECT
 	};
 
+	//FIX THIS!
 	ToolPanel toolPanel;
+	BGPanel topToolPanel;
 	
 	Tool currentTool = null; // The tool currently in use.
 	
@@ -189,7 +193,7 @@ public class PreviewPanel extends JPanel {
 	}
 	
 	public PreviewPanel(final MainWindow mainWindow) {
-		
+		setBorder(BorderFactory.createEmptyBorder());
 		this.mainWindow = mainWindow;
 		//setLayout(new MigLayout()); 
 		setLayout(new MigLayout("fill,ins 0,gap 0"));
@@ -202,6 +206,11 @@ public class PreviewPanel extends JPanel {
 		} else {
 			add(toolPanel,"dock east,width max(200,20%)");
 		}
+		
+		topToolPanel = new BGPanel();
+		topToolPanel.setBackground(Base.getImage("images/toolbar-background.png", this), 0);
+		add(topToolPanel,"dock north,growx,h 30");
+		
 		// Create the content branch and add it to the universe
 		scene = createSTLScene();
 		univ.addBranchGraph(scene);

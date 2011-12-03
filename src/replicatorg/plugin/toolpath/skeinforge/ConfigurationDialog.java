@@ -31,7 +31,8 @@ class ConfigurationDialog extends JDialog implements Profile.ProfileChangedWatch
 	
 	JButton generateButton = new JButton("Generate Gcode");
 	JButton cancelButton = new JButton("Cancel");
-	JButton saveButton = new JButton("Save...");
+	JButton saveAsButton = new JButton("Save As...");
+	JButton saveButton = new JButton("Save");
 	
 	/* these must be explicitly nulled at close because of a java bug:
 	 * http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6497929
@@ -47,13 +48,17 @@ class ConfigurationDialog extends JDialog implements Profile.ProfileChangedWatch
 	JPanel profilePanel = new JPanel();
 	
 	private void loadList(JComboBox comboBox) {
-		comboBox.removeAllItems();
+		Profile lastProfile = parentGenerator.getSelectedProfile();
+		if (comboBox.getItemCount() > 0) {
+			if (lastProfile != null)
+				lastProfile.removeChangeWatcher(this);
+			comboBox.removeAllItems();
+		}
 		profiles = new ArrayList<Profile>(parentGenerator.getProfiles());
 		for (Profile p : profiles) {
 			menuModel.addElement(p);
 		}
 		comboBox.setModel(menuModel);
-		Profile lastProfile = parentGenerator.getSelectedProfile();
 		if (lastProfile != null) {
 			lastProfile.addChangeWatcher(this);
 			menuModel.setSelectedItem(lastProfile);
@@ -109,9 +114,15 @@ class ConfigurationDialog extends JDialog implements Profile.ProfileChangedWatch
 		setTitle("GCode Generator");
 		setLayout(new MigLayout("aligny, top, ins 5, fill"));
 		
+		if (Base.isMacOS()) {
+			this.setModalityType(ModalityType.DOCUMENT_MODAL);
+			this.getRootPane().putClientProperty("apple.awt.documentModalSheet", "true");
+		}
+		
 		generateButton.setEnabled(true);
 		saveButton.setEnabled(false);
-				
+		saveAsButton.setEnabled(true);
+		
 		add(new JLabel("Base Profile:"), "split 2");
 		
 		loadList(prefPulldown);
@@ -137,7 +148,9 @@ class ConfigurationDialog extends JDialog implements Profile.ProfileChangedWatch
 
 		add(cancelButton, "tag cancel, split 3");
 		add(saveButton, "tag finish");
+		add(saveAsButton, "tag finish");
 		add(generateButton, "tag ok");
+
 		generateButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				if(!parentGenerator.runSanityChecks()) {
@@ -158,7 +171,7 @@ class ConfigurationDialog extends JDialog implements Profile.ProfileChangedWatch
 				setVisible(false);
 			}
 		});
-		saveButton.addActionListener(new ActionListener() {
+		saveAsButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				Profile p = parentGenerator.getSelectedProfile();
 				String newName = JOptionPane.showInputDialog(parent,
@@ -168,6 +181,13 @@ class ConfigurationDialog extends JDialog implements Profile.ProfileChangedWatch
 					parentGenerator.setSelectedProfile(newName);
 					pack();
 				}
+			}
+		});
+		saveButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				Profile p = parentGenerator.getSelectedProfile();
+				p.save(parentGenerator.getUserProfilesDir(), p.getName());
+				pack();
 			}
 		});
 		//add(buttonPanel, "wrap, growx");

@@ -26,6 +26,7 @@
 package replicatorg.app.ui;
 
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.event.ActionEvent;
@@ -43,6 +44,7 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.plaf.basic.BasicButtonUI;
+import javax.swing.JPanel;
 
 import net.miginfocom.swing.MigLayout;
 import replicatorg.app.Base;
@@ -52,7 +54,7 @@ import replicatorg.model.BuildElement;
 /**
  * Sketch tabs at the top of the editor window.
  */
-public class EditorHeader extends BGPanel implements ActionListener {
+public class EditorHeader extends JPanel implements ActionListener {
 	private ButtonGroup tabGroup = new ButtonGroup();
 
 	public BuildElement getSelectedElement() {
@@ -76,7 +78,7 @@ public class EditorHeader extends BGPanel implements ActionListener {
 	}
 	
 	private class TabButtonUI extends BasicButtonUI {
-		public void paint(Graphics g,JComponent c) {
+		public void paint(Graphics g, JComponent c) {
 			initTabImages();
 			TabButton b = (TabButton)c;
 			BufferedImage img = b.isSelected()?selectedTabBg:regularTabBg;
@@ -122,10 +124,11 @@ public class EditorHeader extends BGPanel implements ActionListener {
 			buildElementUpdate(element); // set initial string
 			this.element = new WeakReference<BuildElement>(element);
 			setUI(new TabButtonUI());
-			setBorder(new EmptyBorder(6,8,8,10));
+			setBorder(new EmptyBorder(6,7,7,10));
 			tabGroup.add(this);
 			addActionListener(EditorHeader.this);
 			element.addListener(this);
+			setOpaque(false);
 		}
 
 		public void buildElementUpdate(BuildElement element) {
@@ -152,15 +155,22 @@ public class EditorHeader extends BGPanel implements ActionListener {
 
 	public EditorHeader(MainWindow mainWindow) {
 		initTabImages();
-		setBorder(null);
+		// setBorder(null);
 		setLayout(new MigLayout("ins 0 10 0 10,gap 10 10 0 0"));
 		this.editor = mainWindow;
 
 		add(titleLabel);
-		backgroundColor = new Color(0x92, 0xA0, 0x6B);
-		textSelectedColor = Base.getColorPref("header.text.selected.color","#1A1A00");
-		textUnselectedColor = Base.getColorPref("header.text.unselected.color","#ffffff");
-		setBackground(backgroundColor);
+		// backgroundColor = new Color(0xFF, 0xFF, 0x00); //new Color(0x92, 0xA0, 0x6B);
+		// backgroundImg = Base.getImage("images/background-disconnected.png", this);
+		// vOffset = -40;
+
+		textSelectedColor = new Color(0x00, 0x00, 0x00);
+		textUnselectedColor = new Color(0x55, 0x55, 0x55);
+		backgroundColor = new Color(0x00, 0xFF, 0xFF, 0x25); //new Color(0x92, 0xA0, 0x6B);
+		setBackground(null); //backgroundColor
+		setPreferredSize(new Dimension(750,29));
+		
+		setOpaque(false);
 	}
 
 	private void removeTabs() {

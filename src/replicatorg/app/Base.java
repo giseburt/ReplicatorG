@@ -312,11 +312,11 @@ public class Base {
 		}
 
 		if (Base.isMacOS()) {
-	         // Default to sun's XML parser, PLEASE.  Some apps are installing some janky-ass xerces.
-	         System.setProperty("javax.xml.parsers.DocumentBuilderFactory",
-	        		 "com.sun.org.apache.xerces.internal.jaxp.DocumentBuilderFactoryImpl");
-		 System.setProperty("com.apple.mrj.application.apple.menu.about.name",
-				    "ReplicatorG");
+			// Default to sun's XML parser, PLEASE.  Some apps are installing some janky-ass xerces.
+			System.setProperty("javax.xml.parsers.DocumentBuilderFactory",
+				"com.sun.org.apache.xerces.internal.jaxp.DocumentBuilderFactoryImpl");
+			System.setProperty("com.apple.mrj.application.apple.menu.about.name",
+				"ReplicatorG");
 		}
 		
 		// parse command line input

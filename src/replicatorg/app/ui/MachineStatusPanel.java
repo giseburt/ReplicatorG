@@ -10,6 +10,7 @@ import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JLabel;
 import javax.swing.SwingUtilities;
+import javax.swing.JPanel;
 
 import replicatorg.app.Base;
 import replicatorg.drivers.EstimationDriver;
@@ -26,7 +27,7 @@ import replicatorg.machine.MachineToolStatusEvent;
  * @author phooky
  * 
  */
-public class MachineStatusPanel extends BGPanel implements MachineListener {
+public class MachineStatusPanel extends JPanel implements MachineListener {
 	private static final long serialVersionUID = -6944931245041870574L;
 
 	protected JLabel label = new JLabel();
@@ -36,16 +37,16 @@ public class MachineStatusPanel extends BGPanel implements MachineListener {
 	// Keep track of whether we are in a building state or not.
 	private boolean isBuilding = false;
 	
-	static final private Color BG_ERROR = new Color(0xff, 0x80, 0x60);
-	static final private Color BG_READY = new Color(0x80, 0xff, 0x60);
-	static final private Color BG_BUILDING = new Color(0xff, 0xef, 0x00); // process yellow
+	static final private Color BG_ERROR = new Color(0xff, 0x80, 0x60, 0x00);
+	static final private Color BG_READY = new Color(0x80, 0xff, 0x60, 0x00);
+	static final private Color BG_BUILDING = new Color(0xff, 0xef, 0x00, 0x00); // process yellow
 
 	MachineStatusPanel() {
 		Font smallFont = Base.getFontPref("status.font","SansSerif,plain,10");
 		smallLabel.setFont(smallFont);
 		tempLabel.setFont(smallFont);
 		setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-		setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
+		setBorder(BorderFactory.createEmptyBorder(2, 10, 2, 10));
 
 		label.setText("Not Connected");
 		label.setAlignmentX(LEFT_ALIGNMENT);
@@ -69,12 +70,14 @@ public class MachineStatusPanel extends BGPanel implements MachineListener {
 		setMinimumSize(new Dimension(0, height));
 		int prefWidth = 80 * smallMetrics.charWidth('n');
 		setPreferredSize(new Dimension(prefWidth, height));
-		setBackground(BG_ERROR);
+		setBackground(null); //BG_ERROR
+		
+		setOpaque(false);
 	}
 
 
 	private void updatePanel(Color panelColor, String text, String smallText, String tempText) {
-		setBackground(panelColor);
+		setBackground(null);//panelColor
 		label.setText(text);
 		smallLabel.setText(smallText);
 		tempLabel.setText(tempText);

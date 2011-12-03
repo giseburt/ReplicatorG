@@ -319,12 +319,12 @@ ToolpathGenerator.GeneratorListener
 		pane.setLayout(layout);
 
 		buttons = new MainButtonPanel(this);	
-		pane.add(buttons,"growx,dock north");
+		pane.add(buttons,"growx,dock north, h 40");
 
 		machineStatusPanel = new MachineStatusPanel();
-		pane.add(machineStatusPanel,"growx,dock north");
+		buttons.add(machineStatusPanel,"gap unrelated,align right,wrap, h 40");
 
-		pane.add(header,"growx,dock north");
+		buttons.add(header,"growx,span,h 30");
 
 		textarea = new JEditTextArea(new PdeTextAreaDefaults());
 		textarea.setRightClickPopup(new TextAreaPopup());
@@ -360,7 +360,7 @@ ToolpathGenerator.GeneratorListener
 
 		// to fix ugliness.. normally macosx java 1.3 puts an
 		// ugly white border around this object, so turn it off.
-		//splitPane.setBorder(null);
+		splitPane.setBorder(null);
 
 		// the default size on windows is too small and kinda ugly
 		int dividerSize = Base.preferences.getInt("editor.divider.size",5);
