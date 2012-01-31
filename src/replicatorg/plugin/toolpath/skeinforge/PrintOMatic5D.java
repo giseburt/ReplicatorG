@@ -420,8 +420,8 @@ public class PrintOMatic5D implements SkeinforgePreference,ProfileWatcher {
 				"Between 85 and 100.");
 		
 		addBooleanParameter(supportPanel, "raft.csv:Add Raft, Elevate Nozzle, Orbit:",
-				"Use raft", true,
-				"If this option is checked, skeinforge will lay down a rectangular 'raft' of plastic before starting the build.  "
+				"Use Raft/Support", true,
+				"If this option is checked, skeinforge can generate use support material, and will lay down a rectangular 'raft' of plastic below the build.  "
 				+ "Rafts increase the build size slightly, so you should avoid using a raft if your build goes to the edge of the platform.");
 				
 		Vector<String> supportTypes = new Vector<String>();
@@ -596,5 +596,10 @@ public class PrintOMatic5D implements SkeinforgePreference,ProfileWatcher {
 		
 */
 		return options;
+	}
+	
+	@Override
+	public String getName() {
+		return "Print-O-Matic (5D)";
 	}
 }

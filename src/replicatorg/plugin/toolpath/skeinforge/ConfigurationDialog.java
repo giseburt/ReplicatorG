@@ -3,22 +3,17 @@ package replicatorg.plugin.toolpath.skeinforge;
 import java.awt.Frame;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.logging.Level;
 
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
-import javax.swing.JComboBox;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
 
 import net.miginfocom.swing.MigLayout;
 import replicatorg.app.Base;
@@ -47,6 +42,10 @@ class ConfigurationDialog extends JDialog implements Profile.ProfileChangedWatch
 	
 	JPanel profilePanel = new JPanel();
 	
+	/**
+	 * Fills a combo box with a list of skeinforge profiles
+	 * @param comboBox to fill with list of skeinforge profiles
+	 */
 	private void loadList(JComboBox comboBox) {
 		Profile lastProfile = parentGenerator.getSelectedProfile();
 		if (comboBox.getItemCount() > 0) {
@@ -125,8 +124,28 @@ class ConfigurationDialog extends JDialog implements Profile.ProfileChangedWatch
 		
 		add(new JLabel("Base Profile:"), "split 2");
 		
-		loadList(prefPulldown);
-		prefPulldown.addActionListener(new ActionListener() {
+		// This is intended to fix a bug where the "Generate Gcode" button doesn't get enabled 
+		prefPulldown.addActionListener(new ActionListener(){
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				generateButton.setEnabled(true);
+				generateButton.requestFocusInWindow();
+				generateButton.setFocusPainted(true);
+			}
+		});
+		loadList(prefPulldown); /// Filles UI with the list of Skeinforge settings/options
+		add(prefPulldown, "wrap, growx, gapbottom 10");
+
+		for (SkeinforgePreference preference: parentGenerator.getPreferences()) {
+			add(preference.getUI(), "growx, wrap");
+		}
+
+		final JCheckBox autoGen = new JCheckBox("Automatically generate when building.");
+		autoGen.setToolTipText("When building from the model view with this checked " +
+				"GCode will automatically be generated, bypassing this dialog.");
+		add(autoGen, "wrap");
+		autoGen.addActionListener(new ActionListener(){
+			@Override
 			public void actionPerformed(ActionEvent arg0) {
 				String value = (String)prefPulldown.getSelectedItem().toString();
 				Profile oldProfile = parentGenerator.getSelectedProfile();
@@ -138,8 +157,11 @@ class ConfigurationDialog extends JDialog implements Profile.ProfileChangedWatch
 				} else {
 					ConfigurationDialog.this.setSelectedProfile(oldProfile);
 				}
+				Base.preferences.putBoolean("build.autoGenerateGcode", autoGen.isSelected());
 			}
 		});
+		autoGen.setSelected(Base.preferences.getBoolean("build.autoGenerateGcode", false));
+		
 		add(prefPulldown, "wrap, growx");
 
 		for (SkeinforgePreference preference: parentGenerator.preferences) {
@@ -153,6 +175,10 @@ class ConfigurationDialog extends JDialog implements Profile.ProfileChangedWatch
 
 		generateButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
+!!!!
+				parentGenerator.configSuccess = configureGenerator();
+				setVisible(!parentGenerator.configSuccess);
+!!!!
 				if(!parentGenerator.runSanityChecks()) {
 					return;
 				}
@@ -203,5 +229,27 @@ class ConfigurationDialog extends JDialog implements Profile.ProfileChangedWatch
 			}
 		});
 */
+	}
+	
+	/**
+	 * Does pre-skeinforge generation tasks
+	 */
+	protected boolean configureGenerator()
+	{
+		if(!parentGenerator.runSanityChecks()) {
+			return false;
+		}
+		
+		int idx = prefPulldown.getSelectedIndex();
+		
+		if(idx == -1) {
+			return false;
+		}
+		
+		Profile p = getListedProfile(idx);
+		Base.preferences.put("lastGeneratorProfileSelected",p.toString());
+		parentGenerator.profile = p.getFullPath();
+		SkeinforgeGenerator.setSelectedProfile(p.toString());
+		return true;
 	}
 };

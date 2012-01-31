@@ -15,8 +15,11 @@ public class ToolpathGeneratorThread extends Thread {
 	private ToolpathGenerator generator;
 	private Build build;
 	private boolean supportDualStrusion = false;
+	private boolean skipConfig = false;
 	int x, y;
 	String name;
+	
+	
 	public ToolpathGeneratorThread(Frame parent, ToolpathGenerator generator, Build build) {
 		// Naming the thread can ease debugging
 		super("ToolpathGeneratorThread");
@@ -24,10 +27,18 @@ public class ToolpathGeneratorThread extends Thread {
 		this.generator = generator;
 		this.build = build;
 	}
-
+	
+	public ToolpathGeneratorThread(Frame parent, ToolpathGenerator generator, Build build, boolean skipConfig) {
+		this(parent, generator, build);
+		this.skipConfig = skipConfig;
+	}
+	
+	
 	public void addListener(ToolpathGenerator.GeneratorListener listener) {
 		this.generator.addListener(listener);
 	}
+	
+	
 	public void setDualStrusionSupportFlag(boolean b, int lox, int loy, String loName)
 	{
 		supportDualStrusion = b;
@@ -42,15 +53,23 @@ public class ToolpathGeneratorThread extends Thread {
 		ProgressDialog progressDialog = null;
 		if (parent != null) {
 			// Configure, if possible
+			if(skipConfig)
+			{
+				if (!generator.nonvisualConfigure()) { return; }
+			}
+			else
+			{
+				if(!supportDualStrusion)
+				{
+					if (!generator.visualConfigure(parent)) { return; }
+				}
+				if(supportDualStrusion)
+				{
+					if (!generator.visualConfigure(parent, x, y, name)) { return; }
+				}
+			}
+			
 			progressDialog = new ProgressDialog(parent,build,this);
-			if(!supportDualStrusion)
-			{
-				if (!generator.visualConfigure(parent)) { return; }
-			}
-			if(supportDualStrusion)
-			{
-				if (!generator.visualConfigure(parent, x, y, name)) { return; }
-			}
 			generator.addListener(progressDialog);
 			// This actually works because it's a modal dialog;
 			// a new nested event loop is generated in the event loop
@@ -99,15 +118,15 @@ public class ToolpathGeneratorThread extends Thread {
 			BuildCode code = generator.generateToolpath();
 			if (code != null) {
 				build.reloadCode();
-				generator.emitCompletion(GeneratorListener.Completion.SUCCESS, null);
+				generator.emitCompletion(GeneratorListener.Completion.SUCCESS);
 				Base.logger.info("Toolpath generation complete!");
 			} else {
-				generator.emitCompletion(GeneratorListener.Completion.FAILURE, null);
+				generator.emitCompletion(GeneratorListener.Completion.FAILURE);
 				Base.logger.severe("Toolpath generation failed!");
 			}
 		} catch (Exception e) {
 			Base.logger.log(Level.SEVERE,"Toolpath generation failed!",e);
-			generator.emitCompletion(GeneratorListener.Completion.FAILURE, e);
+			generator.emitCompletion(GeneratorListener.Completion.FAILURE);
 		} finally {
 			if (progressDialog != null) {
 				synchronized (progressDialog) {
