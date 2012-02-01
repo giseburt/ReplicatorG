@@ -18,6 +18,7 @@ import java.util.LinkedList;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Collection;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.logging.Level;
@@ -70,6 +71,7 @@ public abstract class SkeinforgeGenerator extends ToolpathGenerator {
 		abstract void profileKeyChanged(String value);
 	}
 	
+	ConfigurationDialog cd;
 	public boolean configSuccess = false;
 	Profile profile = null;
 	
@@ -79,17 +81,13 @@ public abstract class SkeinforgeGenerator extends ToolpathGenerator {
 	
 	JComboBox comboBox = null;
 
-!!!!	
 	BuildCode output;
 	protected final SkeinforgePostProcessor postprocess;
 	
-!!!!
 	public SkeinforgeGenerator() {
+		postprocess = new SkeinforgePostProcessor(this);
 		preferences = getPreferences();
 		getSelectedProfile();
-!!!!
-		postprocess = new SkeinforgePostProcessor(this);
-!!!!
 	}
 	
 	// public void setComboBox(JComboBox comboBox) {
@@ -181,29 +179,6 @@ public abstract class SkeinforgeGenerator extends ToolpathGenerator {
 			} else {
 				return false;
 			}
-			
-			File targetsFile = new File(fullPath+File.separator+"targetMachines.csv");
-			if(targetsFile.exists()) {
-				try {
-					BufferedReader bir = new BufferedReader(new FileReader(targetsFile));
-					String curline = bir.readLine();
-					while (curline != null) {
-						targetMachines.addAll(Arrays.asList(curline.split(",")));
-						curline = bir.readLine();
-					}
-					bir.close();
-					
-					for(String machine : targetMachines)
-						machine = machine.trim();
-					
-				} catch (FileNotFoundException e) {
-					Base.logger.log(Level.FINEST, "Didn't find a targetMachines file in " + fullPath, e);
-				} catch (IOException e) {
-					Base.logger.log(Level.FINEST, "Didn't find a targetMachines file in " + fullPath, e);
-				}
-			} else {
-				
-			}
 		}
 		Profile namedProfile = profiles.get(name);
 		if (namedProfile == null)
@@ -239,7 +214,7 @@ public abstract class SkeinforgeGenerator extends ToolpathGenerator {
 	 * A Profile describes both a profile and all of it's settings.
 	 * @author giseburt
 	 */
-#if 0
+/*
 	static class Profile implements Comparable<Profile> {
 		private String fullPath;
 		private String name;
@@ -278,7 +253,8 @@ public abstract class SkeinforgeGenerator extends ToolpathGenerator {
 				
 			}
 		}
-#endif
+*/
+
 	public static class Profile implements Comparable<Profile> {
 		private File profileFile;
 		private Map<String,String> settingMap = new HashMap<String,String>();
@@ -371,9 +347,9 @@ public abstract class SkeinforgeGenerator extends ToolpathGenerator {
 			return getValue(module+":"+key);
 		}
 		
-		public Set<String> getTargetMachines() {
-			return targetMachines;
-		}
+		// public Set<String> getTargetMachines() {
+		// 	return targetMachines;
+		// }
 
 		public String getValue(String key) {
 			// Base.logger.log(Level.FINEST, "Value for key: " + key + " = " + (overrideMap.containsKey(key) ? overrideMap.get(key) : settingMap.get(key)));
@@ -425,10 +401,8 @@ public abstract class SkeinforgeGenerator extends ToolpathGenerator {
 		}
 		
 		public void clearOverrides() {
-			boolean wasChanged = isChanged();
 			overrideMap.clear();
-			if (isChanged() != wasChanged)
-				notifyProfileChangedChanged();
+			notifyProfileChangedChanged();
 		}
 		
 		public boolean equals(Profile o) {
@@ -583,8 +557,8 @@ public abstract class SkeinforgeGenerator extends ToolpathGenerator {
 				}
 			} // for
 			
-			// if we made a copy, we want to clear our changes and the other profile can read itself in
-			if (makinCopy && clearOverridesAfterSave) {
+			// we want to clear our changes and then redisplay the original values
+			if (clearOverridesAfterSave) {
 				clearOverrides();
 			}
 		}
@@ -1085,7 +1059,7 @@ public abstract class SkeinforgeGenerator extends ToolpathGenerator {
 			}
 		}
 		arguments.add(path);
-for(String a : arguments) System.out.println(a);
+		// for(String a : arguments) System.out.println(a);
 		ProcessBuilder pb = new ProcessBuilder(arguments);
 		pb.directory(getSkeinforgeDir());
 		Process process = null;

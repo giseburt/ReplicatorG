@@ -6,12 +6,14 @@ import java.awt.event.ActionListener;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.logging.Level;
+import java.io.File;
 
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
+import javax.swing.JOptionPane;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
@@ -123,18 +125,25 @@ class ConfigurationDialog extends JDialog implements Profile.ProfileChangedWatch
 		saveAsButton.setEnabled(true);
 		
 		add(new JLabel("Base Profile:"), "split 2");
-		
-		// This is intended to fix a bug where the "Generate Gcode" button doesn't get enabled 
-		prefPulldown.addActionListener(new ActionListener(){
-			@Override
+		loadList(prefPulldown);
+		prefPulldown.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				generateButton.setEnabled(true);
-				generateButton.requestFocusInWindow();
-				generateButton.setFocusPainted(true);
+				Object selectedObject = prefPulldown.getSelectedItem();
+				if (selectedObject == null)
+					return;
+				String value = (String)selectedObject.toString();
+				Profile oldProfile = parentGenerator.getSelectedProfile();
+				boolean changed = parentGenerator.setSelectedProfile(value);
+				// There's a chance that the profile won't actually change, if the user cancelled
+				if (changed) {
+					oldProfile.removeChangeWatcher(ConfigurationDialog.this);
+					parentGenerator.getSelectedProfile().addChangeWatcher(ConfigurationDialog.this);
+				} else {
+					ConfigurationDialog.this.setSelectedProfile(oldProfile);
+				}
 			}
 		});
-		loadList(prefPulldown); /// Filles UI with the list of Skeinforge settings/options
-		add(prefPulldown, "wrap, growx, gapbottom 10");
+		add(prefPulldown, "wrap, growx");
 
 		for (SkeinforgePreference preference: parentGenerator.getPreferences()) {
 			add(preference.getUI(), "growx, wrap");
@@ -147,16 +156,6 @@ class ConfigurationDialog extends JDialog implements Profile.ProfileChangedWatch
 		autoGen.addActionListener(new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
-				String value = (String)prefPulldown.getSelectedItem().toString();
-				Profile oldProfile = parentGenerator.getSelectedProfile();
-				boolean changed = parentGenerator.setSelectedProfile(value);
-				// There's a chance that the profile won't actually change, if the user cancelled
-				if (changed) {
-					oldProfile.removeChangeWatcher(ConfigurationDialog.this);
-					parentGenerator.getSelectedProfile().addChangeWatcher(ConfigurationDialog.this);
-				} else {
-					ConfigurationDialog.this.setSelectedProfile(oldProfile);
-				}
 				Base.preferences.putBoolean("build.autoGenerateGcode", autoGen.isSelected());
 			}
 		});
@@ -168,20 +167,18 @@ class ConfigurationDialog extends JDialog implements Profile.ProfileChangedWatch
 			add(preference.getUI(), "wrap");
 		}
 
-		add(cancelButton, "tag cancel, split 3");
+		add(cancelButton, "tag cancel, split 4");
 		add(saveButton, "tag finish");
 		add(saveAsButton, "tag finish");
 		add(generateButton, "tag ok");
 
 		generateButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-!!!!
 				parentGenerator.configSuccess = configureGenerator();
 				setVisible(!parentGenerator.configSuccess);
-!!!!
-				if(!parentGenerator.runSanityChecks()) {
-					return;
-				}
+				// if(!parentGenerator.runSanityChecks()) {
+				// 	return;
+				// }
 				
 				Profile p = parentGenerator.getSelectedProfile();
 				Base.preferences.put("lastGeneratorProfileSelected",p.toString());
@@ -201,10 +198,15 @@ class ConfigurationDialog extends JDialog implements Profile.ProfileChangedWatch
 			public void actionPerformed(ActionEvent arg0) {
 				Profile p = parentGenerator.getSelectedProfile();
 				String newName = JOptionPane.showInputDialog(parent,
-						"Choose a name (don't change it to over):", p.getName());
+						"Choose a new name:", p.getName() + "+");
 				if (newName != null) {
 					p.save(parentGenerator.getUserProfilesDir(), newName);
+					loadList(prefPulldown);
 					parentGenerator.setSelectedProfile(newName);
+					p.removeChangeWatcher(ConfigurationDialog.this);
+					Profile newProfile = parentGenerator.getSelectedProfile();
+					newProfile.addChangeWatcher(ConfigurationDialog.this);
+					ConfigurationDialog.this.setSelectedProfile(newProfile);
 					pack();
 				}
 			}
@@ -213,6 +215,7 @@ class ConfigurationDialog extends JDialog implements Profile.ProfileChangedWatch
 			public void actionPerformed(ActionEvent arg0) {
 				Profile p = parentGenerator.getSelectedProfile();
 				p.save(parentGenerator.getUserProfilesDir(), p.getName());
+				parentGenerator.setSelectedProfile(p.getName());
 				pack();
 			}
 		});
@@ -246,10 +249,10 @@ class ConfigurationDialog extends JDialog implements Profile.ProfileChangedWatch
 			return false;
 		}
 		
-		Profile p = getListedProfile(idx);
+		Profile p = parentGenerator.getSelectedProfile();
 		Base.preferences.put("lastGeneratorProfileSelected",p.toString());
-		parentGenerator.profile = p.getFullPath();
-		SkeinforgeGenerator.setSelectedProfile(p.toString());
+		// parentGenerator.profile = p.getFullPath();
+		// SkeinforgeGenerator.setSelectedProfile(p.toString());
 		return true;
 	}
 };

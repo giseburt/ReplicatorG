@@ -62,16 +62,6 @@ public class MainButtonPanel extends BGPanel implements MachineListener, ActionL
 	/**
 	 * This button is a special button type for the top bar. 
 	 */
-	// / height, width of the toolbar buttons
-	static final int BUTTON_WIDTH = 32;
-	static final int BUTTON_HEIGHT = 32;
-	
-	static final float disabledFactors[] = { 1.0f, 1.0f, 1.0f, 0.5f };
-	static final float disabledOffsets[] = { 0.0f, 0.0f, 0.0f, 0.0f };
-	static private RescaleOp disabledOp = new RescaleOp(disabledFactors,disabledOffsets,null);
-	static final float activeFactors[] = { -1.0f, -1.0f, -1.0f, 1.0f };
-	static final float activeOffsets[] = { 1.0f, 1.0f, 1.0f, 0.0f };
-	static private RescaleOp activeOp = new RescaleOp(activeFactors,activeOffsets,null);
 
 	class MainButton extends JButton implements ChangeListener {
 		private String rolloverText; 
@@ -132,7 +122,7 @@ public class MainButtonPanel extends BGPanel implements MachineListener, ActionL
 	
 	
 	// / height, width of the toolbar buttons
-	static final int BUTTON_WIDTH = 27;
+	static final int BUTTON_WIDTH = 32;
 	static final int BUTTON_HEIGHT = 32;
 	
 	static final float disabledFactors[] = { 1.0f, 1.0f, 1.0f, 0.5f };
@@ -141,9 +131,6 @@ public class MainButtonPanel extends BGPanel implements MachineListener, ActionL
 	static final float activeFactors[] = { -1.0f, -1.0f, -1.0f, 1.0f };
 	static final float activeOffsets[] = { 1.0f, 1.0f, 1.0f, 0.0f };
 	static private RescaleOp activeOp = new RescaleOp(activeFactors,activeOffsets,null);
-
-
-	
 
 	// / amount of space between groups of buttons on the toolbar
 	static final int BUTTON_GAP = 15;
@@ -169,7 +156,7 @@ public class MainButtonPanel extends BGPanel implements MachineListener, ActionL
 	BufferedImage bgDisconnected, bgConnected, bgBuilding;
 	
 	public MainButtonPanel(MainWindow editor) {
-		setLayout(new MigLayout("gap 0, ins 2 2 0 2"));
+		setLayout(new MigLayout("gap 0, ins 0 2 0 2"));
 		this.editor = editor;
 
 		// hardcoding new blue color scheme for consistency with images,
@@ -180,7 +167,6 @@ public class MainButtonPanel extends BGPanel implements MachineListener, ActionL
 		bgConnected = Base.getImage("images/background-connected.png", this);
 		bgBuilding = Base.getImage("images/background-building.png", this);
 		backgroundImg = bgDisconnected;
-		
 
 		Font statusFont = Base.getFontPref("buttons.status.font","SansSerif,plain,12");
 		Color statusColor = Base.getColorPref("buttons.status.color","#FFFFFF");
@@ -195,7 +181,7 @@ public class MainButtonPanel extends BGPanel implements MachineListener, ActionL
 		fileButton = makeButton("Build to file", "images/button-to-file.png");
 		add(fileButton);
 		generateButton = makeButton("Model to GCode", "images/button-to-gcode.png");
-		add(generateButton);
+		// add(generateButton);
 
 		pauseButton = makeButton("Pause", "images/button-pause.png");
 		add(pauseButton,"gap unrelated");
@@ -218,6 +204,7 @@ public class MainButtonPanel extends BGPanel implements MachineListener, ActionL
 		statusLabel = new JLabel();
 		statusLabel.setFont(statusFont);
 		statusLabel.setForeground(statusColor);
+		statusLabel.setOpaque(false);
 		add(statusLabel, "gap unrelated");
 
 		generateButton.setToolTipText("This will generate gcode for the currently open model.");

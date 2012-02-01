@@ -286,7 +286,25 @@ public class ToolpathGeneratorFactory {
 		    	return Base.getApplicationFile("skein_engines/skeinforge-47/skeinforge_application");
 			}
 			public File getUserProfilesDir() {
-		    	return Base.getUserFile("sf_47_profiles");
+				File profileDir = Base.getUserFile("sf_47_profiles", false);
+				if (!profileDir.exists()) {
+					ArrayList<File> pathsToTry = new ArrayList<File>();
+					pathsToTry.add(Base.getUserFile("sf_45_profiles", false));
+					pathsToTry.add(Base.getUserFile("sf_44_profiles", false));
+					pathsToTry.add(Base.getUserFile("sf_40_profiles", false));
+					
+					for (File path : pathsToTry) {
+						if (path.exists()) {
+							try {
+								Base.copyDir(path, profileDir);
+								break;
+							} catch (IOException ioe) {
+								Base.logger.log(Level.SEVERE,"Couldn't copy "+path+" to your local .replicatorG directory",ioe);
+							}
+						}
+					}
+				}
+				return profileDir;
 			}
 			public List<SkeinforgePreference> initPreferences() {
 				List <SkeinforgePreference> prefs = new LinkedList<SkeinforgePreference>();
@@ -320,6 +338,7 @@ public class ToolpathGeneratorFactory {
 				
 				PrintOMatic5D printOMatic5D = new PrintOMatic5D();
 				prefs.add(printOMatic5D);
+				addProfileWatcher(printOMatic5D);
 				
 				return prefs;
 			}

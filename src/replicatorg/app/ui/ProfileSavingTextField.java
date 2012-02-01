@@ -1,6 +1,9 @@
 package replicatorg.app.ui;
 
+import java.text.Format;
+
 import replicatorg.app.Base;
+import replicatorg.app.ui.ActionTextField;
 import replicatorg.plugin.toolpath.skeinforge.SkeinforgeGenerator.Profile;
 import replicatorg.plugin.toolpath.skeinforge.SkeinforgeGenerator.ProfileWatcher;
 
@@ -20,13 +23,13 @@ public class ProfileSavingTextField extends ActionTextField implements ProfileWa
 		void saveValue(String text, Profile profile);
 	}
 	
-	public ProfileSavingTextField(String keyName, String text, int columns) {
-		super(text, columns);
+	public ProfileSavingTextField(String keyName, Object value, int columns, Format format) {
+		super(value, columns, format);
 		this.keyName = keyName;
 	}
 
-	public ProfileSavingTextField(CalculatedValueModifier calcModifier, int columns) {
-		super("", columns);
+	public ProfileSavingTextField(CalculatedValueModifier calcModifier, int columns, Format format) {
+		super("", columns, format);
 		this.calcModifier = calcModifier;
 		this.keyName = null;
 	}

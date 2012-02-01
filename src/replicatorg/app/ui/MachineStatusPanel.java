@@ -10,7 +10,9 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
-import net.miginfocom.swing.MigLayout;
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
 import replicatorg.app.Base;
 import replicatorg.drivers.EstimationDriver;
 import replicatorg.machine.MachineListener;
@@ -51,15 +53,16 @@ public class MachineStatusPanel extends BGPanel implements MachineListener {
 	static final private Color BG_BUILDING = new Color(0xff, 0xef, 0x00, 0x00); // process yellow
 
 	MachineStatusPanel() {
-		Font smallFont = Base.getFontPref("status.font","SansSerif,plain,10");
+		Font statusFont = Base.getFontPref("status.font","SansSerif,plain,12");
+		Font smallFont = statusFont.deriveFont(10f);
 		smallLabel.setFont(smallFont);
 		tempLabel.setFont(smallFont);
 		setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 		setBorder(BorderFactory.createEmptyBorder(2, 10, 2, 10));
 
-		label.setText("Not Connected");
-		label.setAlignmentX(LEFT_ALIGNMENT);
-		add(label);
+		mainLabel.setText("Not Connected");
+		mainLabel.setAlignmentX(LEFT_ALIGNMENT);
+		add(mainLabel);
 		smallLabel.setAlignmentX(LEFT_ALIGNMENT);
 		{
 			Box b = Box.createHorizontalBox();

@@ -84,14 +84,16 @@ class EditProfileDialog extends JDialog {
 	//used to check if we want to display a specific profile, based on selected machine, etc.
 	private boolean displayProfile(Profile p) {
 
-		String selectedMachine = Base.preferences.get("machine.name", "no machine selected");
+		// String selectedMachine = Base.preferences.get("machine.name", "no machine selected");
+		// 
+		// if("no machine selected".equals(selectedMachine) ||
+		// 	filterBox.isSelected() ||
+		// 	p.getTargetMachines().isEmpty()  || // if the profile specifies no targets
+		// 	p.getTargetMachines().contains(selectedMachine)) // if the profile targets the selected machine
+		// 	return true;
+		// return false;
 		
-		if("no machine selected".equals(selectedMachine) ||
-			filterBox.isSelected() ||
-			p.getTargetMachines().isEmpty()  || // if the profile specifies no targets
-			p.getTargetMachines().contains(selectedMachine)) // if the profile targets the selected machine
-			return true;
-		return false;
+		return true;
 	}
 
 	/**

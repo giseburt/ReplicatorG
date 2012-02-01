@@ -176,7 +176,7 @@ public class PrintOMatic5D implements SkeinforgePreference,ProfileWatcher {
 	}
 	
 	private void addTextParameter(JComponent target, String name, String description, String defaultValue, String toolTip) {
-		ProfileSavingTextField input = new ProfileSavingTextField(name, "", 10);
+		ProfileSavingTextField input = new ProfileSavingTextField(name, "", 10, null);
 		profileWatchers.add(input);
 		
 		target.add(new JLabel(description));
@@ -193,7 +193,7 @@ public class PrintOMatic5D implements SkeinforgePreference,ProfileWatcher {
 	}
 	
 	private void addTextParameter(JComponent target, ProfileSavingTextField.CalculatedValueModifier modifier, String description, String defaultValue, String toolTip) {
-		ProfileSavingTextField input = new ProfileSavingTextField(modifier, 10);
+		ProfileSavingTextField input = new ProfileSavingTextField(modifier, 10, null);
 		profileWatchers.add(input);
 		
 		target.add(new JLabel(description));
@@ -256,7 +256,7 @@ public class PrintOMatic5D implements SkeinforgePreference,ProfileWatcher {
 		component.add(profileInfo, "wrap, spanx, align center");
 		profileWatchers.add(new ProfileWatcher() {
 			public void profileChanged(Profile newProfile) {
-				String driverName = (Base.getMachineLoader().isLoaded() ? Base.getMachineLoader().getMachine().getDriver().getDriverName() : "None");
+				String driverName = (Base.getMachineLoader().isLoaded() ? Base.getMachineLoader().getDriver().getDriverName() : "None");
 				// yuck to maintain this!
 				boolean isRPM = driverName.equals("Makerbot4GAlternate");
 
