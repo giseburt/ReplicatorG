@@ -36,6 +36,12 @@ public abstract class ActionTextField extends JFormattedTextField {
 		
 		@Override
 		public void focusGained(FocusEvent arg0) {
+	        if (! arg0.isTemporary()) {
+	            // This is needed to put the text field in edited mode, so that its processFocusEvent doesn't
+	            // do anything. Otherwise, it calls setValue, and the selection is lost.
+	            ActionTextField.this.setText(ActionTextField.this.getText());
+	            ActionTextField.this.selectAll();
+	        }
 		}
 
 		@Override
