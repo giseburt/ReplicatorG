@@ -365,9 +365,23 @@ public class PrintOMatic5D implements SkeinforgePreference,ProfileWatcher {
 		addTextParameter(printPanel, extraShellsCalculator,
 				"Number of shells:", "1",
 				"Number of shells to add to the perimeter of an object. Set this to 0 if you are printing a model with thin features.");
+
+		// We save the extra shells in various values, so we need a calculator
+		ProfileSavingTextField.CalculatedValueModifier feedFlowRateCalculator = new FormattedDoubleModifier("speed.csv:Feed Rate (mm/s):", 0, 1) {
+				@Override
+				public void saveValue(String text, Profile profile) {
+					profile.setValueForPlastic("speed.csv:Feed Rate (mm/s):", text);
+					profile.setValueForPlastic("speed.csv:Flow Rate Setting (float):", text);
+				}
+			};
 		
-		addTextParameter(printPanel, new FormattedDoubleModifier("speed.csv:Feed Rate (mm/s):", 0, 1),
+		addTextParameter(printPanel, feedFlowRateCalculator,
 				"Feedrate (mm/s)", "30",
+				"slow: 0-20, default: 30, Fast: 40+");
+
+
+		addTextParameter(printPanel, new FormattedDoubleModifier("speed.csv:Travel Feed Rate (mm/s):", 0, 1),
+				"Travel Speed (mm/s)", "30",
 				"slow: 0-20, default: 30, Fast: 40+");
 		
 		
