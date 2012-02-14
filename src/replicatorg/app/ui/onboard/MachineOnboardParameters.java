@@ -24,6 +24,7 @@ import replicatorg.app.Base;
 import replicatorg.drivers.Driver;
 import replicatorg.drivers.OnboardParameters;
 import replicatorg.machine.model.AxisId;
+import replicatorg.util.Point5d;
 
 /**
  * A panel for editing the options stored onboard a machine.
@@ -80,6 +81,21 @@ public class MachineOnboardParameters extends JPanel {
 	private JFormattedTextField vref2 = new JFormattedTextField(threePlaces);
 	private JFormattedTextField vref3 = new JFormattedTextField(threePlaces);
 	private JFormattedTextField vref4 = new JFormattedTextField(threePlaces);
+	
+	private JFormattedTextField masterAcceleration = new JFormattedTextField(threePlaces);
+	
+	private JFormattedTextField minimumPlannerSpeed = new JFormattedTextField(threePlaces);
+
+	private JFormattedTextField xAxisAcceleration = new JFormattedTextField(threePlaces);
+	private JFormattedTextField yAxisAcceleration = new JFormattedTextField(threePlaces);
+	private JFormattedTextField zAxisAcceleration = new JFormattedTextField(threePlaces);
+	private JFormattedTextField aAxisAcceleration = new JFormattedTextField(threePlaces);
+	private JFormattedTextField bAxisAcceleration = new JFormattedTextField(threePlaces);
+
+	private JFormattedTextField xyJunctionJerk = new JFormattedTextField(threePlaces);
+	private JFormattedTextField  zJunctionJerk = new JFormattedTextField(threePlaces);
+	private JFormattedTextField  aJunctionJerk = new JFormattedTextField(threePlaces);
+	private JFormattedTextField  bJunctionJerk = new JFormattedTextField(threePlaces);
 
 	
 	/** Prompts the user to fire a bot  reset after the changes have been sent to the board.
@@ -151,6 +167,28 @@ public class MachineOnboardParameters extends JPanel {
 			target.setStoredStepperVoltage(2, ((Number)vref2.getValue()).intValue());
 			target.setStoredStepperVoltage(3, ((Number)vref3.getValue()).intValue());
 			target.setStoredStepperVoltage(4, ((Number)vref4.getValue()).intValue());
+		}
+		
+		if(target.hasAccelerationSupport())
+		{
+			target.setMasterAccelerationRate(((Number)masterAcceleration.getValue()).intValue());
+
+			target.setMinimumPlannerSpeed(((Number)minimumPlannerSpeed.getValue()).doubleValue());
+			
+			Point5d accelerationRates = new Point5d();
+			accelerationRates.set(0, ((Number)xAxisAcceleration.getValue()).doubleValue());
+			accelerationRates.set(1, ((Number)yAxisAcceleration.getValue()).doubleValue());
+			accelerationRates.set(2, ((Number)zAxisAcceleration.getValue()).doubleValue());
+			accelerationRates.set(3, ((Number)aAxisAcceleration.getValue()).doubleValue());
+			accelerationRates.set(4, ((Number)bAxisAcceleration.getValue()).doubleValue());
+			target.setAxisAccelerationRates(accelerationRates);
+
+			Point5d jerkRates = new Point5d();
+			jerkRates.set(0, ((Number)xyJunctionJerk.getValue()).doubleValue());
+			jerkRates.set(2, ((Number) zJunctionJerk.getValue()).doubleValue());
+			jerkRates.set(3, ((Number) aJunctionJerk.getValue()).doubleValue());
+			jerkRates.set(4, ((Number) bJunctionJerk.getValue()).doubleValue());
+			target.setAxisJunctionJerks(jerkRates);
 		}
 		requestResetFromUser();
 	}
@@ -225,6 +263,27 @@ public class MachineOnboardParameters extends JPanel {
 			vref3.setValue(this.target.getStoredStepperVoltage(3));
 			vref4.setValue(this.target.getStoredStepperVoltage(4));
 		}
+		
+		
+		if(target.hasAccelerationSupport())
+		{
+			masterAcceleration.setValue(target.getMasterAccelerationRate());
+
+			minimumPlannerSpeed.setValue(target.getMinimumPlannerSpeed());
+			
+			Point5d accelerationRates = target.getAxisAccelerationRates();
+			xAxisAcceleration.setValue(accelerationRates.x());
+			yAxisAcceleration.setValue(accelerationRates.y());
+			zAxisAcceleration.setValue(accelerationRates.z());
+			aAxisAcceleration.setValue(accelerationRates.a());
+			bAxisAcceleration.setValue(accelerationRates.b());
+
+			Point5d jerkRates = target.getAxisJunctionJerks();
+			xyJunctionJerk.setValue(jerkRates.get(0));
+			 zJunctionJerk.setValue(jerkRates.get(2));
+			 aJunctionJerk.setValue(jerkRates.get(3));
+			 bJunctionJerk.setValue(jerkRates.get(4));
+		}
 	}
 
 	protected void dispose() {
@@ -236,46 +295,46 @@ public class MachineOnboardParameters extends JPanel {
 		this.driver = driver;
 		this.parent = parent;
 		
-		setLayout(new MigLayout("fill"));
+		setLayout(new MigLayout("fill", "[r][l][r][l]"));
 		EnumMap<AxisId, String> axesAltNamesMap = target.getAxisAlises();
 
 		add(new JLabel("Machine Name (max. "+Integer.toString(MAX_NAME_LENGTH)+" chars)"));
 		machineNameField.setColumns(MAX_NAME_LENGTH);
-		add(machineNameField,"span 2, wrap");
+		add(machineNameField,"spanx, wrap");
 
   		if( target.hasToolCountOnboard() ) {
   			add(new JLabel("Reported Tool Count:"));
-  			add(toolCountField, "span 2, wrap");
+  			add(toolCountField, "spanx, wrap");
   		}
 		
 		
 		add(new JLabel("Invert X axis"));		
-		add(xAxisInvertBox,"span 2, wrap");
+		add(xAxisInvertBox,"spanx, wrap");
 		
 		add(new JLabel("Invert Y axis"));
-		add(yAxisInvertBox,"span 2, wrap");
+		add(yAxisInvertBox,"spanx, wrap");
 		
 		add(new JLabel("Invert Z axis"));
-		add(zAxisInvertBox,"span 2, wrap");
+		add(zAxisInvertBox,"spanx, wrap");
 
 		String aName = "Invert A axis";
 		if( axesAltNamesMap.containsKey(AxisId.A) )
 			aName = aName + " (" + axesAltNamesMap.get(AxisId.A) + ") ";
 		add(new JLabel(aName));
-		add(aAxisInvertBox,"span 2, wrap");
+		add(aAxisInvertBox,"spanx, wrap");
 		
 		String bName = "Invert B axis";
 		if( axesAltNamesMap.containsKey(AxisId.B) )
 			bName = bName + " (" + axesAltNamesMap.get(AxisId.B) + ") ";
 		add(new JLabel(bName));
-		
-		add(bAxisInvertBox,"span 2, wrap");
+		add(bAxisInvertBox,"spanx, wrap");
+
 		add(new JLabel("Hold Z axis"));
-		
-		add(zHoldBox,"span 2, wrap");
+		add(zHoldBox,"spanx, wrap");
+
 		add(new JLabel("Invert endstops"));
-		
-		add(endstopInversionSelection,"span 2, wrap");
+		add(endstopInversionSelection,"spanx, wrap");
+
 		add(new JLabel("Emergency stop"));
 		add(estopSelection,"spanx, wrap");
 		
@@ -294,37 +353,81 @@ public class MachineOnboardParameters extends JPanel {
 			vref4.setColumns(4);
 			add(new JLabel("X home offset (mm)"));
 			add(xAxisHomeOffsetField);
-			add(new JLabel("VREF Pot. 0"), "split");
+			add(new JLabel("VREF Pot. 0"));
 			add(vref0, "wrap");
 			add(new JLabel("Y home offset (mm)"));
 			add(yAxisHomeOffsetField);
-			add(new JLabel("VREF Pot. 1"), "split");
+			add(new JLabel("VREF Pot. 1"));
 			add(vref1, "wrap");
 			add(new JLabel("Z home offset (mm)"));
 			add(zAxisHomeOffsetField);
-			add(new JLabel("VREF Pot. 2"), "split");
+			add(new JLabel("VREF Pot. 2"));
 			add(vref2, "wrap");
 			add(new JLabel("A home offset (mm)"));
 			add(aAxisHomeOffsetField);
-			add(new JLabel("VREF Pot. 3"), "split");
+			add(new JLabel("VREF Pot. 3"));
 			add(vref3, "wrap");
 			add(new JLabel("B home offset (mm)"));
 			add(bAxisHomeOffsetField);
-			add(new JLabel("VREF Pot. 4"), "split");
+			add(new JLabel("VREF Pot. 4"));
 			add(vref4, "wrap");
 		}
 		else
 		{
 			add(new JLabel("X home offset (mm)"));
-			add(xAxisHomeOffsetField,"wrap");
+			add(xAxisHomeOffsetField,"spanx, wrap");
 			add(new JLabel("Y home offset (mm)"));
-			add(yAxisHomeOffsetField,"wrap");
+			add(yAxisHomeOffsetField,"spanx, wrap");
 			add(new JLabel("Z home offset (mm)"));
-			add(zAxisHomeOffsetField,"wrap");
+			add(zAxisHomeOffsetField,"spanx, wrap");
 			add(new JLabel("A home offset (mm)"));
-			add(aAxisHomeOffsetField,"wrap");
+			add(aAxisHomeOffsetField,"spanx, wrap");
 			add(new JLabel("B home offset (mm)"));
-			add(bAxisHomeOffsetField,"wrap");
+			add(bAxisHomeOffsetField,"spanx, wrap");
+		}
+
+		if(target.hasAccelerationSupport())
+		{
+			masterAcceleration.setColumns(4);
+			minimumPlannerSpeed.setColumns(4);
+			xAxisAcceleration.setColumns(8);
+			xyJunctionJerk.setColumns(4);
+			yAxisAcceleration.setColumns(8);
+			zAxisAcceleration.setColumns(8);
+			zJunctionJerk.setColumns(4);
+			aAxisAcceleration.setColumns(8);
+			aJunctionJerk.setColumns(4);
+			bAxisAcceleration.setColumns(8);
+			bJunctionJerk.setColumns(4);
+
+			add(new JLabel("Master acceleration rate (mm/s/s)"));
+			add(masterAcceleration, "spanx, wrap");
+
+			add(new JLabel("Deceleration minimum speed (mm/s)"));
+			add(minimumPlannerSpeed, "spanx, wrap");
+			
+			add(new JLabel("X acceleration rate (mm/s/s)"));
+			add(xAxisAcceleration);
+			add(new JLabel("X/Y max junction jerk (mm/s)"));
+			add(xyJunctionJerk, "wrap");
+
+			add(new JLabel("Y acceleration rate (mm/s/s)"));
+			add(yAxisAcceleration, "spanx, wrap");
+
+			add(new JLabel("Z acceleration rate (mm/s/s)"));
+			add(zAxisAcceleration);
+			add(new JLabel("Z maximum junction jerk (mm/s)"));
+			add(zJunctionJerk, "wrap");
+
+			add(new JLabel("A acceleration rate (mm/s/s)"));
+			add(aAxisAcceleration);
+			add(new JLabel("A maximum junction jerk (mm/s)"));
+			add(aJunctionJerk, "wrap");
+
+			add(new JLabel("B acceleration rate (mm/s/s)"));
+			add(bAxisAcceleration);
+			add(new JLabel("B maximum junction jerk (mm/s)"));
+			add(bJunctionJerk, "wrap");
 		}
 
 		
@@ -336,7 +439,7 @@ public class MachineOnboardParameters extends JPanel {
 			}
 		});
 		resetToFactoryButton.setToolTipText("Reest the onboard settings to the factory defaults");
-		add(resetToFactoryButton, "split 1");
+		add(resetToFactoryButton, "span 4, split 3");
 
 		
 		resetToBlankButton.addActionListener(new ActionListener() {
@@ -346,7 +449,7 @@ public class MachineOnboardParameters extends JPanel {
 //				loadParameters();
 			}
 		});
-		resetToBlankButton.setToolTipText("Reest the onboard settings to the *completely blank*");
+		resetToBlankButton.setToolTipText("Reset the onboard settings to the *completely blank*");
 		add(resetToBlankButton);
 
 		commitButton.addActionListener(new ActionListener() {
