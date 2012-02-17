@@ -155,9 +155,9 @@ public class ToolpathGeneratorFactory {
 
 				// This will be done by the SkeinforgePostProcessor
 				SkeinforgeBooleanPreference bookendPref = 	
-					new SkeinforgeBooleanPreference("Use machine-specific start/end gcode",	"replicatorg.skeinforge.useMachineBookend", true,
+					new SkeinforgeBooleanPreference("Use default start/end gcode",	"replicatorg.skeinforge.useMachineBookend", true,
 						"<html>Use the start and end.gcode defined in machines/*.xml for the currently selected machine.<br/>" +
-						"If unchecked, uses start and end.gcode in the skeinforge profile.</html>");
+						"Uncheck this to use custom start and end.gcode from the skeinforge profile.</html>");
 				bookendPref.addTrueOption(new SkeinforgeOption("preface.csv", "Name of Start File:", ""));
 				bookendPref.addTrueOption(new SkeinforgeOption("preface.csv", "Name of End File:", ""));
 				final JCheckBox bookendBox = (JCheckBox)bookendPref.getUI();
@@ -279,7 +279,7 @@ public class ToolpathGeneratorFactory {
 		class Skeinforge47 extends SkeinforgeGenerator {
 
 			{
-				displayName = "Skeinforge (47) - experimental";
+				displayName = "Skeinforge (47)";
 			}
 			
 			public File getDefaultSkeinforgeDir() {
@@ -313,9 +313,9 @@ public class ToolpathGeneratorFactory {
 
 				// This will be done by the SkeinforgePostProcessor
 				SkeinforgeBooleanPreference bookendPref = 	
-					new SkeinforgeBooleanPreference("Use machine-specific start/end gcode",	"replicatorg.skeinforge.useMachineBookend", true,
+					new SkeinforgeBooleanPreference("Use default start/end gcode",	"replicatorg.skeinforge.useMachineBookend", true,
 						"<html>Use the start and end.gcode defined in machines/*.xml for the currently selected machine.<br/>" +
-						"If unchecked, uses start and end.gcode in the skeinforge profile.</html>");
+						"Uncheck this to use custom start and end.gcode from the skeinforge profile.</html>");
 				bookendPref.addTrueOption(new SkeinforgeOption("alteration.csv", "Name of Start File:", ""));
 				bookendPref.addTrueOption(new SkeinforgeOption("alteration.csv", "Name of End File:", ""));
 				final JCheckBox bookendBox = (JCheckBox)bookendPref.getUI();
@@ -344,24 +344,24 @@ public class ToolpathGeneratorFactory {
 			}
 		};
 		
-		if((new Skeinforge35()).getDefaultSkeinforgeDir().exists())
-			list.add(new ToolpathGeneratorDescriptor(Skeinforge35.displayName, 
-				"This is a decent version of skeinforge.", Skeinforge35.class));
+		if((new Skeinforge47()).getDefaultSkeinforgeDir().exists())
+			list.add(new ToolpathGeneratorDescriptor(Skeinforge47.displayName, 
+				"This is a new version of skeinforge.", Skeinforge47.class));
+		if((new Skeinforge45()).getDefaultSkeinforgeDir().exists())
+			list.add(new ToolpathGeneratorDescriptor(Skeinforge45.displayName, 
+				"This is an experimental version of skeinforge.", Skeinforge44.class));
 		if((new Skeinforge40()).getDefaultSkeinforgeDir().exists())
 			list.add(new ToolpathGeneratorDescriptor(Skeinforge40.displayName, 
 				"This is a recent version of skeinforge.", Skeinforge40.class));
-		if((new Skeinforge45()).getDefaultSkeinforgeDir().exists())
-			list.add(new ToolpathGeneratorDescriptor(Skeinforge45.displayName, 
-				"This is an experimental version of skeinforge.", Skeinforge45.class));
-		if((new Skeinforge47()).getDefaultSkeinforgeDir().exists())
-			list.add(new ToolpathGeneratorDescriptor(Skeinforge47.displayName, 
-				"This is an experimental version of skeinforge.", Skeinforge47.class));
+		if((new Skeinforge35()).getDefaultSkeinforgeDir().exists())
+			list.add(new ToolpathGeneratorDescriptor(Skeinforge35.displayName, 
+				"This is the default version of skeinforge.", Skeinforge35.class));
 		if((new Skeinforge31()).getDefaultSkeinforgeDir().exists())
 			list.add(new ToolpathGeneratorDescriptor(Skeinforge31.displayName, 
 				"This is an old version of skeinforge.", Skeinforge31.class));
 		if((new Skeinforge6()).getDefaultSkeinforgeDir().exists())
 			list.add(new ToolpathGeneratorDescriptor(Skeinforge6.displayName, 
-				"This is an old version of skeinforge.", Skeinforge6.class));
+				"This is an ancient version of skeinforge.", Skeinforge6.class));
 		
 		return list;
 	}

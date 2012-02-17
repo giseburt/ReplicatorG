@@ -10,7 +10,6 @@ import java.io.File;
 
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
-import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JOptionPane;
@@ -57,7 +56,11 @@ class ConfigurationDialog extends JDialog implements Profile.ProfileChangedWatch
 		}
 		profiles = new ArrayList<Profile>(parentGenerator.getProfiles());
 		for (Profile p : profiles) {
-			menuModel.addElement(p);
+			// Check that this profile says it's for this machine
+			if(ProfileUtils.shouldDisplay(p))
+			{
+				menuModel.addElement(p);
+			}
 		}
 		comboBox.setModel(menuModel);
 		if (lastProfile != null) {
@@ -111,6 +114,7 @@ class ConfigurationDialog extends JDialog implements Profile.ProfileChangedWatch
 
 	public ConfigurationDialog(final Frame parent, final SkeinforgeGenerator parentGeneratorIn) {
 		super(parent, true);
+
 		parentGenerator = parentGeneratorIn;
 		setTitle("GCode Generator");
 		setLayout(new MigLayout("aligny, top, ins 5, fill"));
@@ -249,7 +253,7 @@ class ConfigurationDialog extends JDialog implements Profile.ProfileChangedWatch
 			return false;
 		}
 		
-		Profile p = parentGenerator.getSelectedProfile();
+		Profile p = ProfileUtils.getListedProfile(prefPulldown.getModel(), profiles, idx);
 		Base.preferences.put("lastGeneratorProfileSelected",p.toString());
 		// parentGenerator.profile = p.getFullPath();
 		// SkeinforgeGenerator.setSelectedProfile(p.toString());

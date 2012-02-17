@@ -79,11 +79,9 @@ public class PrintOMatic implements SkeinforgePreference,ProfileWatcher {
 		String value = null;
 		
 		if (fullName != null) {
-			System.out.println(fullName);
 			value = Base.preferences.get(fullName, options.firstElement());
 			
 			// Store it back so that we can be assured that it is set.
-			System.out.println("fullname " + fullName + " value " + value);
 			Base.preferences.put(fullName, value);
 		}
 		target.add(new JLabel(description));

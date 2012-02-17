@@ -172,7 +172,6 @@ public class MachineOnboardParameters extends JPanel {
 		if(target.hasAccelerationSupport())
 		{
 			target.setMasterAccelerationRate(((Number)masterAcceleration.getValue()).intValue());
-
 			target.setMinimumPlannerSpeed(((Number)minimumPlannerSpeed.getValue()).doubleValue());
 			
 			Point5d accelerationRates = new Point5d();
@@ -390,13 +389,18 @@ public class MachineOnboardParameters extends JPanel {
 		{
 			masterAcceleration.setColumns(4);
 			minimumPlannerSpeed.setColumns(4);
+			
 			xAxisAcceleration.setColumns(8);
 			xyJunctionJerk.setColumns(4);
+			
 			yAxisAcceleration.setColumns(8);
+			
 			zAxisAcceleration.setColumns(8);
 			zJunctionJerk.setColumns(4);
+			
 			aAxisAcceleration.setColumns(8);
 			aJunctionJerk.setColumns(4);
+			
 			bAxisAcceleration.setColumns(8);
 			bJunctionJerk.setColumns(4);
 
@@ -433,7 +437,10 @@ public class MachineOnboardParameters extends JPanel {
 		
 		resetToFactoryButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				MachineOnboardParameters.this.resetToFactory();
+				int n = JOptionPane.showConfirmDialog(MachineOnboardParameters.this, "Are you sure you wish to reset the motherboard settings \nto the factory defaults?", "Reset EEPROM to Blank?", JOptionPane.YES_NO_OPTION);
+				if (n == JOptionPane.YES_OPTION) {
+					MachineOnboardParameters.this.resetToFactory();
+				}
 				// This gets called in resetToFactory()
 //				loadParameters();
 			}
@@ -444,12 +451,15 @@ public class MachineOnboardParameters extends JPanel {
 		
 		resetToBlankButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				MachineOnboardParameters.this.resetToBlank();
+				int n = JOptionPane.showConfirmDialog(MachineOnboardParameters.this, "Are you sure you wish to reset the motherboard settings \nto *completely blank*?", "Reset EEPROM to Blank?", JOptionPane.YES_NO_OPTION);
+				if (n == JOptionPane.YES_OPTION) {
+					MachineOnboardParameters.this.resetToBlank();
+				}
 				// This gets called in resetToFactory()
 //				loadParameters();
 			}
 		});
-		resetToBlankButton.setToolTipText("Reset the onboard settings to the *completely blank*");
+		resetToBlankButton.setToolTipText("Reset the onboard settings to *completely blank*!");
 		add(resetToBlankButton);
 
 		commitButton.addActionListener(new ActionListener() {

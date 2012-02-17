@@ -75,7 +75,6 @@ import java.util.regex.Pattern;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.ButtonGroup;
-import javax.swing.JCheckBox;
 import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
@@ -120,6 +119,7 @@ import replicatorg.app.ui.modeling.EditingModel;
 import replicatorg.app.ui.modeling.PreviewPanel;
 import replicatorg.app.ui.onboard.OnboardParametersWindow;
 import replicatorg.app.util.PythonUtils;
+import replicatorg.app.util.StreamLoggerThread;
 import replicatorg.app.util.SwingPythonSelector;
 import replicatorg.app.util.serial.Name;
 import replicatorg.app.util.serial.Serial;
@@ -226,6 +226,7 @@ ToolpathGenerator.GeneratorListener
 
 	JMenuItem saveMenuItem;
 	JMenuItem saveAsMenuItem;
+	JMenuItem generateItem;
 	JMenuItem stopItem;
 	JMenuItem pauseItem;
 	JMenuItem controlPanelItem;
@@ -233,6 +234,9 @@ ToolpathGenerator.GeneratorListener
 	JMenuItem profilesMenuItem;
 	JMenuItem dualstrusionItem;
 	JMenuItem combineItem;
+	JMenuItem editDualstartItem;
+	JMenuItem editStartItem;
+	JMenuItem editEndItem;
 	JMenu changeToolheadMenu = new JMenu("Swap Toolhead in .gcode");
 
 	
@@ -249,8 +253,6 @@ ToolpathGenerator.GeneratorListener
 	private boolean preheatMachine = false;
 	
 	PreferencesWindow preferences;
-	
-	// boolean presenting;
 
 	// undo fellers
 	JMenuItem undoItem, redoItem;
@@ -1005,6 +1007,14 @@ ToolpathGenerator.GeneratorListener
 		item.setEnabled(false);
 		menu.add(item);
 
+		generateItem = newJMenuItem("Generate", 'G', true);
+		generateItem.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				runToolpathGenerator(false);
+			}
+		});
+		menu.add(generateItem);
+
 		buildMenuItem = newJMenuItem("Build", 'B');
 		buildMenuItem.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -1130,12 +1140,49 @@ ToolpathGenerator.GeneratorListener
 		menu.add(combineItem);
 		combineItem.setEnabled(true);
 */
+		menu.addSeparator();
+
+		editDualstartItem = new JMenuItem("Edit Dual-Start gcode");
+		editDualstartItem.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				if(machineLoader != null && machineLoader.getMachineInterface() != null) {
+					File dualstart = machineLoader.getMachineInterface().getModel().getDualstartBookendCode();
+					if(dualstart != null)
+						handleOpenFile(dualstart);
+				}
+			}
+		});
+		menu.add(editDualstartItem);
+
+		editStartItem = new JMenuItem("Edit Start gcode");
+		editStartItem.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				if(machineLoader != null && machineLoader.getMachineInterface() != null) {
+					File start = machineLoader.getMachineInterface().getModel().getStartBookendCode();
+					if(start != null)
+						handleOpenFile(start);
+				}
+			}
+		});
+		menu.add(editStartItem);
+		
+		editEndItem = new JMenuItem("Edit End gcode");
+		editEndItem.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				if(machineLoader != null && machineLoader.getMachineInterface() != null) {
+					File end = machineLoader.getMachineInterface().getModel().getEndBookendCode();
+					if(end != null)
+						handleOpenFile(end);
+				}
+			}
+		});
+		menu.add(editEndItem);
 		
 		return menu;
 	}
 
 	JMenuItem onboardParamsItem = new JMenuItem("Onboard Preferences...");
-	JMenuItem toolheadIndexingItem = new JMenuItem("Set Toolhead Index...");
+//	JMenuItem toolheadIndexingItem = new JMenuItem("Set Toolhead Index...");
 	JMenuItem realtimeControlItem = new JMenuItem("Open real time controls window...");
 	JMenuItem infoPanelItem = new JMenuItem("Machine information...");
 	JMenuItem preheatItem;
@@ -1169,14 +1216,14 @@ ToolpathGenerator.GeneratorListener
 		onboardParamsItem.setVisible(false);
 		menu.add(onboardParamsItem);
 
-		toolheadIndexingItem.addActionListener(new ActionListener(){
-			public void actionPerformed(ActionEvent arg0) {
-				handleToolheadIndexing();
-			}
-		});
-
-		toolheadIndexingItem.setVisible(false);
-		menu.add(toolheadIndexingItem);
+//		toolheadIndexingItem.addActionListener(new ActionListener(){
+//			public void actionPerformed(ActionEvent arg0) {
+//				handleToolheadIndexing();
+//			}
+//		});
+//
+//		toolheadIndexingItem.setVisible(false);
+//		menu.add(toolheadIndexingItem);
 
 		realtimeControlItem.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent arg0) {
@@ -1931,54 +1978,27 @@ ToolpathGenerator.GeneratorListener
 	public BuildFlag detectBuildIntention()
 	{
 		BuildFlag flag = BuildFlag.NONE;
-
-		// if we have gcode selected, simply build
-		BuildElement elementInVew = header.getSelectedElement(); 
-		if( elementInVew == null ) {
-			Base.logger.severe("cannot determine build intention, no view selected.");
-			return flag; ///fail 
-		}
-
-		if( elementInVew.getType() == BuildElement.Type.GCODE)
+		
+		BuildElement elementInView = header.getSelectedElement();
+		if(elementInView.getType() == BuildElement.Type.GCODE)
 		{
 			flag = BuildFlag.JUST_BUILD;
 		}
-		
-		else if(getBuild() != null)
+		else if(elementInView.getType() == BuildElement.Type.MODEL)
 		{
-			//no code. Generate code and build
-			if(getBuild().getCode() == null)
-			{
+			if(Base.preferences.getBoolean("build.autoGenerateGcode", true))
 				flag = BuildFlag.GEN_AND_BUILD;
-			}
-			else if(Base.preferences.getBoolean("build.showRegenCheck", true))
-			{
-				JCheckBox showCheck = new JCheckBox("Print from Model View always regenerates gcode.");
-				Object[] choices = {"Regenerate GCode", "Use existing GCode"};
-				Object[] message = new Object[]{
-						"WARNING: Printing from Model View. \n","Overwrite existing gcode for this model?\n\n",
-						showCheck
-						};
-				int option = JOptionPane.showOptionDialog(this, message, "Re-generate Gcode?", 
-					JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE,
-					null, choices, choices[1]);
-
-				if(showCheck.isSelected())
-					Base.preferences.putBoolean("build.showRegenCheck", false); 
-				 
-				if(option == JOptionPane.CLOSED_OPTION) 	
-					flag = BuildFlag.NONE; //exit clicked
-				else if(option == 0 )  
-					flag = BuildFlag.GEN_AND_BUILD; //gen and build
-				else if (option == 1) 
-					flag = BuildFlag.JUST_BUILD; //build from old generation
-			}
-			else
-			{
-				// If showRegenCheck is false, the user wants us to always regenerate
-				flag = BuildFlag.GEN_AND_BUILD;
-			}
 		}
+		
+		if(flag == BuildFlag.NONE && getBuild() != null)
+		{
+			if(getBuild().getCode() != null)
+				flag = BuildFlag.JUST_BUILD;
+			else
+				flag = BuildFlag.GEN_AND_BUILD;
+		}
+		
+		///fail.
 		return flag;
 	}
 	
@@ -1998,7 +2018,7 @@ ToolpathGenerator.GeneratorListener
 			//'rewrite' clicked
 			buildOnComplete = true;
 			doPreheat(Base.preferences.getBoolean("build.doPreheat", false));				
-			runToolpathGenerator(Base.preferences.getBoolean("build.autoGenerateGcode", false));
+			runToolpathGenerator(Base.preferences.getBoolean("build.autoGenerateGcode", true));
 		}
 		if(buildFlag == BuildFlag.JUST_BUILD) {
 			//'use existing' clicked
@@ -2036,6 +2056,7 @@ ToolpathGenerator.GeneratorListener
 //				setEditorBusy(false);
 //				building = false;
 //			}
+			maybeRunScript("scripts/start.sh", handleOpenPath, String.valueOf(buildStart.getTime()));
 		}
 	}
 
@@ -2267,6 +2288,7 @@ ToolpathGenerator.GeneratorListener
 		}
 
 		boolean hasGcode = getBuild().getCode() != null;
+		boolean hasModel = getBuild().getModel() != null;
 
 		//		serialMenu.setEnabled(!evt.getState().isConnected());
 		//		machineMenu.setEnabled(!evt.getState().isConnected());
@@ -2279,13 +2301,27 @@ ToolpathGenerator.GeneratorListener
 		onboardParamsItem.setVisible(showParams);
 		onboardParamsItem.setEnabled(showParams);
 		preheatItem.setEnabled(evt.getState().isConnected() && !building);
+		generateItem.setEnabled(hasModel && !building);
+
+		if(machineLoader.getMachineInterface() != null) {
+			File dualstart = machineLoader.getMachineInterface().getModel().getDualstartBookendCode();
+			editDualstartItem.setEnabled(dualstart != null);
+		}
+		if(machineLoader.getMachineInterface() != null) {
+			File start = machineLoader.getMachineInterface().getModel().getStartBookendCode();
+			editStartItem.setEnabled(start != null);
+		}
+		if(machineLoader.getMachineInterface() != null) {
+			File end = machineLoader.getMachineInterface().getModel().getEndBookendCode();
+			editEndItem.setEnabled(end != null);
+		}
 		
-		boolean showIndexing = 
-			evt.getState().isConfigurable() &&
-			machineLoader.getDriver() instanceof MultiTool &&
-			((MultiTool)machineLoader.getDriver()).toolsCanBeReindexed() &&
-			machineLoader.getMachineInterface().getMachineType() != MachineType.THE_REPLICATOR;
-		toolheadIndexingItem.setVisible(showIndexing);
+//		boolean showIndexing = 
+//			evt.getState().isConfigurable() &&
+//			machineLoader.getDriver() instanceof MultiTool &&
+//			((MultiTool)machineLoader.getDriver()).toolsCanBeReindexed() &&
+//			machineLoader.getMachineInterface().getMachineType() != MachineType.THE_REPLICATOR;
+//		toolheadIndexingItem.setVisible(showIndexing);
 
 		boolean showRealtimeTuning = 
 			evt.getState().isConnected() &&
@@ -2343,9 +2379,11 @@ ToolpathGenerator.GeneratorListener
 
 		long elapsed = finished.getTime() - started.getTime();
 
-		String message = "Build finished.\n\n";
-		message += "Completed in "
-			+ EstimationDriver.getBuildTimeString(elapsed);
+		String time_string = EstimationDriver.getBuildTimeString(elapsed);
+		String message = "Build finished.\n\nCompleted in "	+ time_string;
+
+		maybeRunScript("scripts/complete.sh", handleOpenPath, String.valueOf(elapsed / 1000), time_string);
+
 		Base.showMessage("Build finished", message);
 	}
 
@@ -2413,6 +2451,12 @@ ToolpathGenerator.GeneratorListener
 		// called by menu or buttons or during panel ops
 		doStop();
 		setEditorBusy(false);
+
+		Date started = buildStart;
+		Date finished = new Date();
+		long elapsed = finished.getTime() - started.getTime();
+		String time_string = EstimationDriver.getBuildTimeString(elapsed);
+		maybeRunScript("scripts/stop.sh", handleOpenPath,  String.valueOf(elapsed / 1000), time_string);
 	}
 
 	class EstimationThread extends Thread {
@@ -2487,6 +2531,7 @@ ToolpathGenerator.GeneratorListener
 		doPreheat(false);
 		building = false;
 		simulating = false;
+		buildOnComplete = false;
 	}
 
 	public void handleReset() {
@@ -2803,6 +2848,7 @@ ToolpathGenerator.GeneratorListener
 			setModel(build.getModel());
 			updateBuild();
 			buttons.updateFromMachine(machineLoader.getMachineInterface());
+			generateItem.setEnabled(build.getModel() != null);
 			if (null != path) {
 				handleOpenPath = path;
 				mruList.update(path);
@@ -3256,5 +3302,25 @@ ToolpathGenerator.GeneratorListener
 	@Override
 	public void updateGenerator(GeneratorEvent evt) {
 		// ignore
+	}
+
+	private void maybeRunScript(String path, String ... arguments) {
+		// Run a shell script if possible. Fail silently.
+		try {
+			List<String> command = new LinkedList<String>();
+			command.add(path);
+			for (int i = 0; i < arguments.length; i++)
+				command.add(arguments[i]);
+			ProcessBuilder pb = new ProcessBuilder(command);
+			Process process = pb.start();
+			Base.logger.log(Level.INFO, "Running script: " + path);
+			// Fire off some loggers
+			StreamLoggerThread ist = new StreamLoggerThread(process.getInputStream());
+			ist.setDefaultLevel(Level.INFO);
+			ist.start();
+			StreamLoggerThread est = new StreamLoggerThread(process.getErrorStream());
+			est.setDefaultLevel(Level.WARNING);
+			est.start();
+		} catch (java.io.IOException e) {}
 	}
 }

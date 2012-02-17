@@ -192,14 +192,17 @@ public class EditorHeader extends JPanel implements ActionListener {
 	}
 	
 	void setBuild(Build build) {
+		int lines = 0;
 		removeTabs();
 		if (build.getModel() != null) {
 			addTabForElement(build,build.getModel());
 		}
 		if (build.getCode() != null) {
 			addTabForElement(build,build.getCode());
+            		lines = build.getLines();
 		}
 		titleLabel.setText(build.getName());
+		titleLabel.setToolTipText("lines: "+lines);
 		validate();
 		repaint();
 	}

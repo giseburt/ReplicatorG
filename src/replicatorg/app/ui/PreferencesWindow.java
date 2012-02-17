@@ -44,6 +44,7 @@ import replicatorg.app.Base.InitialOpenBehavior;
 import replicatorg.app.util.PythonUtils;
 import replicatorg.app.util.SwingPythonSelector;
 import replicatorg.machine.MachineInterface;
+import replicatorg.machine.model.MachineType;
 import replicatorg.uploader.FirmwareUploader;
 
 /**
@@ -189,15 +190,16 @@ public class PreferencesWindow extends JFrame implements GuiConstants {
 		content.add(fontSizeField);
 		content.add(new JLabel("  (requires restart of ReplicatorG)"), "wrap");
 
-		addCheckboxForPref(content,"Monitor temperature during builds","build.monitor_temp",false);
+		addCheckboxForPref(content,"Monitor temperature during builds","build.monitor_temp", (machine.getMachineType() == MachineType.THE_REPLICATOR));
 		addCheckboxForPref(content,"Automatically connect to machine at startup","replicatorg.autoconnect",true);
 		addCheckboxForPref(content,"Show experimental machine profiles","machine.showExperimental",false);
 		addCheckboxForPref(content,"Review GCode for potential toolhead problems before building","build.safetyChecks",true);
 		addCheckboxForPref(content,"Break Z motion into seperate moves (normally false)","replicatorg.parser.breakzmoves",false);
 		addCheckboxForPref(content,"Show starfield in model preview window","ui.show_starfield",false);
 		addCheckboxForPref(content,"Notifications in System tray","ui.preferSystemTrayNotifications",false);
-		addCheckboxForPref(content,"Show warning when building from model w/ existing gcode","build.showRegenCheck",true);
-		
+		addCheckboxForPref(content,"Automatically re-generate gcode when building from model view.","build.autoGenerateGcode",true);
+		addCheckboxForPref(content,"Use native avrdude for uploading code","uploader.useNative",false);
+
 		JPanel advanced = new JPanel();
 		content = advanced;
 		content.setLayout(new MigLayout("fill"));
@@ -341,10 +343,13 @@ public class PreferencesWindow extends JFrame implements GuiConstants {
 		
 		{
 			final int defaultTemp = 75;
-			final String tooltip = "When build is pressed, begin bringing bot up to this temperature";
+			final String tooltipGeneral = "When enabled, starting all builds heats components to this temperature";
+			final String tooltipHead = "Set preheat temperature for the specified toolhead";
+			final String tooltipPlatform = "Set preheat temperature for the build platfom";
+			
 			
 			final JCheckBox preheatCb = new JCheckBox("Preheat builds");
-			preheatCb.setToolTipText(tooltip);
+			preheatCb.setToolTipText(tooltipGeneral);
 			content.add(preheatCb, "split");
 			
 			preheatCb.addActionListener(new ActionListener(){
@@ -355,9 +360,9 @@ public class PreferencesWindow extends JFrame implements GuiConstants {
 			});
 			preheatCb.setSelected(Base.preferences.getBoolean("build.doPreheat", false));
 			
-			final JLabel t0Label = new JLabel("Toolhead0:");
-			final JLabel t1Label = new JLabel("Toolhead1:");
-			final JLabel pLabel = new JLabel("Platform:");
+			final JLabel t0Label = new JLabel("Toolhead Right: ");
+			final JLabel t1Label = new JLabel("Toolhead Left: ");
+			final JLabel pLabel = new JLabel("Platform: ");
 			
 			Integer t0Value = Base.preferences.getInt("build.preheatTool0", defaultTemp);
 			Integer t1Value = Base.preferences.getInt("build.preheatTool1", defaultTemp);
@@ -367,9 +372,12 @@ public class PreferencesWindow extends JFrame implements GuiConstants {
 			final JFormattedTextField t1Field = new JFormattedTextField(Base.getLocalFormat());
 			final JFormattedTextField pField = new JFormattedTextField(Base.getLocalFormat());
 			
-			t0Field.setToolTipText(tooltip);
-			t1Field.setToolTipText(tooltip);
-			pField.setToolTipText(tooltip);
+			t0Field.setToolTipText(tooltipHead);
+			t0Label.setToolTipText(tooltipHead);
+			t1Field.setToolTipText(tooltipHead);
+			t1Label.setToolTipText(tooltipHead);
+			pField.setToolTipText(tooltipPlatform);
+			pLabel.setToolTipText(tooltipPlatform);
 
 			t0Field.setValue(t0Value);
 			t1Field.setValue(t1Value);

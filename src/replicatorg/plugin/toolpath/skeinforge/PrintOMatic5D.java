@@ -12,6 +12,7 @@ import java.text.DecimalFormat;
 import java.text.ParseException;
 
 import javax.swing.DefaultComboBoxModel;
+import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
@@ -226,6 +227,9 @@ public class PrintOMatic5D implements SkeinforgePreference,ProfileWatcher {
 		
 	}
 
+	private void setValue(String optionName, String value) {
+		Base.preferences.put(baseName + optionName, value);
+	}
 	
 	private void addBooleanParameter(JComponent target, String name, String description, boolean defaultValue, String toolTip) {
 		target.add(new JLabel(description));
