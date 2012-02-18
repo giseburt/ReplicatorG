@@ -11,8 +11,7 @@ import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
 import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
+import net.miginfocom.swing.MigLayout;
 import replicatorg.app.Base;
 import replicatorg.drivers.EstimationDriver;
 import replicatorg.machine.MachineListener;
@@ -57,23 +56,16 @@ public class MachineStatusPanel extends BGPanel implements MachineListener {
 		Font smallFont = statusFont.deriveFont(10f);
 		smallLabel.setFont(smallFont);
 		tempLabel.setFont(smallFont);
-		setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-		setBorder(BorderFactory.createEmptyBorder(2, 10, 2, 10));
+		setLayout(new MigLayout("nocache,fill,gap 0 0,ins 0", "[grow, right]", "[40%][30%][30%]"));
+		setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0));
 
 		mainLabel.setText("Not Connected");
-		mainLabel.setAlignmentX(LEFT_ALIGNMENT);
-		add(mainLabel);
-		smallLabel.setAlignmentX(LEFT_ALIGNMENT);
-		{
-			Box b = Box.createHorizontalBox();
-			b.add(smallLabel);
-			b.add(Box.createHorizontalGlue());
-			b.add(tempLabel);
-			b.setAlignmentX(LEFT_ALIGNMENT);
-			tempLabel.setAlignmentX(RIGHT_ALIGNMENT);
-			add(b);
-		}
-		add(Box.createVerticalGlue());
+		mainLabel.setAlignmentX(RIGHT_ALIGNMENT);
+		add(mainLabel, "right,growx, wrap");
+		smallLabel.setAlignmentX(RIGHT_ALIGNMENT);
+		add(smallLabel, "right,growx, wrap");
+		tempLabel.setAlignmentX(RIGHT_ALIGNMENT);
+		add(tempLabel, "right,growx");
 
 		FontMetrics smallMetrics = this.getFontMetrics(smallFont);
 		FontMetrics bigMetrics = this.getFontMetrics(statusFont);

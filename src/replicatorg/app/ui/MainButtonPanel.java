@@ -136,6 +136,7 @@ public class MainButtonPanel extends BGPanel implements MachineListener, ActionL
 	static final int BUTTON_GAP = 15;
 
 	MainWindow editor;
+	MachineStatusPanel machineStatusPanel;
 
 	Image offscreen;
 
@@ -146,7 +147,7 @@ public class MainButtonPanel extends BGPanel implements MachineListener, ActionL
 
 	JLabel statusLabel;
 
-	final static Color BACK_COLOR = new Color(0xFF, 0xFF, 0x00); //new Color(0x5F, 0x73, 0x25); 
+	final static Color BACK_COLOR = new Color(0xFF, 0xFF, 0x00, 0x00); //new Color(0x5F, 0x73, 0x25); 
 	MainButton simButton, pauseButton, stopButton;
 	MainButton buildButton, resetButton, cpButton, rcButton;
 	MainButton disconnectButton, connectButton, generateButton;
@@ -156,7 +157,7 @@ public class MainButtonPanel extends BGPanel implements MachineListener, ActionL
 	BufferedImage bgDisconnected, bgConnected, bgBuilding;
 	
 	public MainButtonPanel(MainWindow editor) {
-		setLayout(new MigLayout("gap 0, ins 0 2 0 2"));
+		setLayout(new MigLayout("nocache,gap 0, ins 0 5 0 5, hmin 70", "[32][32][32][32][32][32][0][32][32][32]10[grow, right]", "[42]0[29]"));
 		this.editor = editor;
 
 		// hardcoding new blue color scheme for consistency with images,
@@ -173,7 +174,7 @@ public class MainButtonPanel extends BGPanel implements MachineListener, ActionL
 
 
 		buildButton = makeButton("Build", "images/button-build.png");
-		add(buildButton);
+		add(buildButton, "hmin 32");
 
 		playbackButton = makeButton("Build from SD card currently in printer", "images/button-playback.png");
 		add(playbackButton);
@@ -198,13 +199,17 @@ public class MainButtonPanel extends BGPanel implements MachineListener, ActionL
 		connectButton = makeButton("Connect", "images/button-connect.png");
 		add(connectButton,"gap unrelated");
 		disconnectButton = makeButton("Disconnect", "images/button-disconnect.png");
-		add(disconnectButton);
+		add(disconnectButton, "gap unrelated");
+
+		machineStatusPanel = new MachineStatusPanel();
+		add(machineStatusPanel,"grow,wrap,wmin 10"); // wrap here because the main window injects the header later
+		Base.getMachineLoader().addMachineListener(machineStatusPanel);
 
 		statusLabel = new JLabel();
 		statusLabel.setFont(statusFont);
 		statusLabel.setForeground(statusColor);
 		statusLabel.setOpaque(false);
-		add(statusLabel, "gap unrelated");
+		// add(statusLabel, "spanx, hmin 20");
 
 		playbackButton.setToolTipText("This will build an object from an SD card currently inserted in the printer");
 		fileButton.setToolTipText("This will generate an .s3g file that can be put on an SD card and printed locally on the printer.");
@@ -218,7 +223,7 @@ public class MainButtonPanel extends BGPanel implements MachineListener, ActionL
 		connectButton.setToolTipText("Connect to the machine.");
 		disconnectButton.setToolTipText("Disconnect from the machine.");
 
-		setPreferredSize(new Dimension(750,40));
+		setPreferredSize(new Dimension(750,42));
 		
 		// Update initial state
 		machineStateChangedInternal(new MachineStateChangeEvent(null, new MachineState(MachineState.State.NOT_ATTACHED)));

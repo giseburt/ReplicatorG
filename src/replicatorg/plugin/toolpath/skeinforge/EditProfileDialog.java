@@ -143,7 +143,7 @@ class EditProfileDialog extends JDialog {
 		            Profile p = ProfileUtils.getListedProfile(list.getModel(), profiles, idx);
 					Base.preferences.put("lastGeneratorProfileSelected",p.toString());
 					parentGenerator.configSuccess = true;
-					parentGenerator.profile = p.getFullPath();
+					parentGenerator.profile = p;
 					setVisible(false);
 		        }
 		    }
@@ -161,7 +161,7 @@ class EditProfileDialog extends JDialog {
 					Profile p = ProfileUtils.getListedProfile(prefList.getModel(), profiles, idx);
 					Base.preferences.put("lastGeneratorProfileSelected",p.toString());
 					parentGenerator.configSuccess = true;
-					parentGenerator.profile = p.getFullPath();
+					parentGenerator.profile = p;
 					setVisible(false);
 				} else if(e.getKeyCode() == KeyEvent.VK_ESCAPE) {
 					setVisible(false);

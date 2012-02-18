@@ -206,7 +206,6 @@ ToolpathGenerator.GeneratorListener
 	{
 		header.setChangeListener(this);
 	}
-	MachineStatusPanel machineStatusPanel;
 
 	MessagePanel console;
 
@@ -330,16 +329,13 @@ ToolpathGenerator.GeneratorListener
 		setJMenuBar(menubar);
 
 		Container pane = getContentPane();
-		MigLayout layout = new MigLayout("nocache,fill,flowy,gap 0 0,ins 0");
+		MigLayout layout = new MigLayout("nocache,fill,gap 0 0,ins 0");
 		pane.setLayout(layout);
 
 		buttons = new MainButtonPanel(this);	
-		pane.add(buttons,"growx,dock north, h 40");
+		pane.add(buttons,"dock north,growx,h 70,wrap");
 
-		machineStatusPanel = new MachineStatusPanel();
-		buttons.add(machineStatusPanel,"gap unrelated,align right,wrap, h 40");
-
-		buttons.add(header,"growx,span,h 30");
+		buttons.add(header,"growx,spanx,h 29");
 
 		textarea = new JEditTextArea(new PdeTextAreaDefaults());
 		textarea.setRightClickPopup(new TextAreaPopup());
@@ -446,7 +442,6 @@ ToolpathGenerator.GeneratorListener
 
 		// Have UI elements listen to machine state.
 		machineLoader.addMachineListener(this);
-		machineLoader.addMachineListener(machineStatusPanel);
 		machineLoader.addMachineListener(buttons);
 	}
 

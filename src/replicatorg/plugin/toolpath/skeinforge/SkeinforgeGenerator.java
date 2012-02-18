@@ -261,6 +261,8 @@ public abstract class SkeinforgeGenerator extends ToolpathGenerator {
 		private Map<String,String> overrideMap = new HashMap<String,String>();
 		// subProfiles -- such as ABS, PLA, PVA, etc. These have arbitray names, BTW.
 		private LinkedList<String> subProfiles = new LinkedList<String>();
+		// targetMachines is a filter that will allow this profile to only be show for specified machines
+		private Set<String> targetMachines = new TreeSet<String>();
 		
 		public interface ProfileChangedWatcher {
 			public void profileIsChanged(Profile profile);
@@ -305,6 +307,33 @@ public abstract class SkeinforgeGenerator extends ToolpathGenerator {
 		public Profile(String fullPath) {
 			this.profileFile = new File(fullPath);
 			this.scanProfileFolder(profileFile, (String)null, 0, false);
+
+			File targetsFile = new File(fullPath+File.separator+"targetMachines.csv");
+			if(targetsFile.exists()) {
+				try {
+					BufferedReader bir = new BufferedReader(new FileReader(targetsFile));
+					String curline = bir.readLine();
+					while (curline != null) {
+						targetMachines.addAll(Arrays.asList(curline.split(",")));
+						curline = bir.readLine();
+					}
+					bir.close();
+					
+					for(String machine : targetMachines)
+						machine = machine.trim();
+					
+				} catch (FileNotFoundException e) {
+					Base.logger.log(Level.FINEST, "Didn't find a targetMachines file in " + fullPath, e);
+				} catch (IOException e) {
+					Base.logger.log(Level.FINEST, "Didn't find a targetMachines file in " + fullPath, e);
+				}
+			} else {
+				
+			}
+		}
+		
+		public Set<String> getTargetMachines() {
+			return targetMachines;
 		}
 		
 		public void addModifiedProfile(String modifiedPath) {

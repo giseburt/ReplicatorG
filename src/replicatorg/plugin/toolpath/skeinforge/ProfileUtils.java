@@ -93,7 +93,7 @@ public class ProfileUtils {
 		return false;
 	}
 	public static Profile getListedProfile(ListModel model, Collection<Profile> profiles, int idx) {
-		String selected = (String)model.getElementAt(idx);
+		String selected = model.getElementAt(idx).toString();
 		for(Profile p : profiles)
 			if(selected.equals(p.toString()))
 				return p;

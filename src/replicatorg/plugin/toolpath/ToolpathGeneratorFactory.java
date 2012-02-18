@@ -349,7 +349,7 @@ public class ToolpathGeneratorFactory {
 				"This is a new version of skeinforge.", Skeinforge47.class));
 		if((new Skeinforge45()).getDefaultSkeinforgeDir().exists())
 			list.add(new ToolpathGeneratorDescriptor(Skeinforge45.displayName, 
-				"This is an experimental version of skeinforge.", Skeinforge44.class));
+				"This is an experimental version of skeinforge.", Skeinforge45.class));
 		if((new Skeinforge40()).getDefaultSkeinforgeDir().exists())
 			list.add(new ToolpathGeneratorDescriptor(Skeinforge40.displayName, 
 				"This is a recent version of skeinforge.", Skeinforge40.class));
