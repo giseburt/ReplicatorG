@@ -301,6 +301,16 @@ public class MightyBoard extends Makerbot4GAlternateDriver
 			Base.logger.severe("Please double-check your selected machine.");
 		}
 		
+		boolean stepsPerMMMatched = checkEepromStepsPerMM();
+		if (!stepsPerMMMatched) {
+			int n = JOptionPane.showConfirmDialog(null, "The motherboard's stored steps/mm settings\ndon't match the selected machine profile.\nWould you like to update the motherboard\nsettings to match the profile and close the connection?\n", "Steps/mm mismatch", JOptionPane.YES_NO_OPTION);
+			if (n == JOptionPane.YES_OPTION) {
+				setEepromStepsPerMM();
+				reset(/*reconnect*/ false);
+				return false;
+			}
+		}
+		
 		// I have no idea why we still do this, we may want to test and refactor away
 		getSpindleSpeedPWM();
 		return true;
