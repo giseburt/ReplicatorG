@@ -29,6 +29,8 @@ import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.Hashtable;
 
+import javax.swing.JOptionPane;
+
 import replicatorg.app.Base;
 import replicatorg.drivers.InteractiveDisplay;
 import replicatorg.drivers.OnboardParameters;
@@ -149,8 +151,14 @@ class MightyBoardEEPROM implements EEPROMClass
 	///  1 byte. 0x01 for 'never booted before' 0x00 for 'have been booted before)
 	final public static int FIRST_BOOT_FLAG	= 0x0156;
 
+	final public static int EEPROM_STEPS_PER_MM_OFFSET          = 0x0160;
+	final public static int EEPROM_ACCELERATION_RATE_OFFSET     = 0x0174;
+	final public static int EEPROM_AXIS_ACC_RATE_OFFSET         = 0x0178;
+	final public static int EEPROM_AXIS_JUNCTION_JERK_OFFSET    = 0x018C;
+	final public static int EEPROM_MINIMUM_PLANNER_SPEED_OFFSET = 0x019C;
+
 	/// start of free space
-	final public static int FREE_EEPROM_STARTS = 0x0158;
+	final public static int FREE_EEPROM_STARTS = 0x019D;
 
 }
 
