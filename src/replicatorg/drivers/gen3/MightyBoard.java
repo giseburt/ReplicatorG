@@ -924,6 +924,192 @@ public class MightyBoard extends Makerbot4GAlternateDriver
 	}
 
 
+	/**
+	 * Returns true of the current firmware supports acceleration.
+	 * FIXME FIXME FIXME FIXME FIXME FIXME FIXME FIXME
+	 */
+	@Override
+	public boolean hasAccelerationSupport() {
+		return true;
+	}
+
+	/**
+	 * Reads a Point5d that is the individual acceleration rates of each axis,
+	 * in steps/mm.
+	 */
+	@Override
+	public Point5d getAxisAccelerationRates() {
+		checkEEPROM();
+		byte[] defaultValue = {
+			(byte)0xD0, (byte)0x07, (byte)0x00, (byte)0x00, /* X 2000 */
+			(byte)0xD0, (byte)0x07, (byte)0x00, (byte)0x00, /* Y 2000 */
+			(byte)0x0A, (byte)0x00, (byte)0x00, (byte)0x00, /* Z 10   */
+			(byte)0x88, (byte)0x13, (byte)0x00, (byte)0x00, /* A 5000 */
+			(byte)0x88, (byte)0x13, (byte)0x00, (byte)0x00, /* B 5000 */
+		};
+		byte[] r = readFromEEPROMwithDefault(
+				MightyBoardEEPROM.EEPROM_AXIS_ACC_RATE_OFFSET, 20, defaultValue
+			);
+				
+		// Point5d stepsPerMM = getMachine().getStepsPerMM();
+		Point5d acceleration = new Point5d();
+		for (int axis = 0; axis < 5; axis++) {
+			int val = 0;
+			for (int i = 0; i < 4; i++) {
+				val = val | (((int) r[i+(axis*4)] & 0xff) << 8 * i);
+			}
+			acceleration.set(axis, (double)val);
+		}
+		return acceleration;
+	}
+
+	/**
+	 * Writes a Point5d that is the individual acceleration rates of each axis,
+	 * in steps/mm, to the motherboard EEPROM.
+	 */
+	@Override
+	public void setAxisAccelerationRates(Point5d acceleration) {
+		// Point5d stepsPerMM = getMachine().getStepsPerMM();
+		for (int axis = 0; axis < 5; axis++) {
+			int val = (int)Math.ceil(acceleration.get(axis));
+			writeToEEPROM(MightyBoardEEPROM.EEPROM_AXIS_ACC_RATE_OFFSET + (axis * 4), intToLE(val));
+		}
+	}
+
+	/**
+	 * Reads an int that contains the master acceleration rate (for integrated calculations).
+	 */
+	@Override
+	public int getMasterAccelerationRate() {
+		checkEEPROM();
+		byte[] defaultValue = {(byte)0xd0, (byte)0x07, (byte)0x00, (byte)0x00, /* 2000 */};
+		byte[] r = readFromEEPROMwithDefault(
+				MightyBoardEEPROM.EEPROM_ACCELERATION_RATE_OFFSET, 4, defaultValue);
+
+		int val = 0;
+		for (int i = 0; i < 4; i++) {
+			val = val | (((int) r[i] & 0xff) << 8 * i);
+		}
+		
+		return val;
+	}
+
+	/**
+	 * Writes an int that contains the master acceleration rate (for integrated calculations)
+	 * to the motherboard EEPROM.
+	 */
+	@Override
+	public void setMasterAccelerationRate(int acceleration) {
+		checkEEPROM();
+		writeToEEPROM(MightyBoardEEPROM.EEPROM_ACCELERATION_RATE_OFFSET, intToLE(acceleration));
+	}
+
+	/**
+	 * Checks that the StepsPerMM EEPROM settings on the motherboard matches those in the machine profile.
+	 * StepsPerMM are stored in fixed-point Q16 (top 16 bits are integert, bottom 16 are fractional).
+	 */
+	@Override
+	public boolean checkEepromStepsPerMM() {
+		checkEEPROM();
+		byte[] r = readFromEEPROM(
+				MightyBoardEEPROM.EEPROM_STEPS_PER_MM_OFFSET, 20);
+
+		Point5d stepsPerMM = getMachine().getStepsPerMM();
+		for (int axis = 0; axis < 5; axis++) {
+			byte[] check = floatTo32LE((float)stepsPerMM.get(axis));
+			for (int i = 0; i < 4; i++) {
+				if (r[i+(axis * 4)] != check[i])
+					return false;
+			}
+		}
+		return true;
+	}
+
+	/**
+	 * Writes the StepsPerMM from the machine profile to the EEPROM settings on the motherboard.
+	 * StepsPerMM are stored in fixed-point Q16 (top 16 bits are integert, bottom 16 are fractional).
+	 */
+	@Override
+	public void setEepromStepsPerMM() {
+		Point5d stepsPerMM = getMachine().getStepsPerMM();
+		for (int axis = 0; axis < 5; axis++) {
+			float val = (float)stepsPerMM.get(axis);
+			writeToEEPROM(MightyBoardEEPROM.EEPROM_STEPS_PER_MM_OFFSET + (axis * 4), floatTo32LE(val));
+		}
+	}
+
+	/**
+	 * Reads the junction jerk values from the EEPROM settings on the motherboard and returns a Point5d.
+	 * NOTE: X and Y have an integrated junction jerk, so the Y value will always be 0.
+	 * Jerks are stored in fixed-point Q16 (top 16 bits are integert, bottom 16 are fractional).
+	 */
+	@Override
+	public Point5d getAxisJunctionJerks() {
+		checkEEPROM();
+		byte[] defaultValue = {
+			0x00, 0x00, 0x08, 0x00, /* X/Y = 8 */
+			0x00, 0x00, 0x08, 0x00, /* Z = 8 */
+			0x00, 0x00, 0x0A, 0x00, /* A = 10 */
+			0x00, 0x00, 0x0A, 0x00, /* A = 10 */
+		};
+		byte[] r = readFromEEPROMwithDefault(
+				MightyBoardEEPROM.EEPROM_AXIS_JUNCTION_JERK_OFFSET, 16, defaultValue
+			);
+
+		// Point5d stepsPerMM = getMachine().getStepsPerMM();
+		Point5d jerks = new Point5d();
+		int offset = 0;
+		for (int axis = 0; axis < 5; axis++) {
+			if (axis == 1)
+				continue;
+			double val = byte32LEToFloat(r, offset);
+			jerks.set(axis, val);
+			offset += 4;
+		}
+		return jerks;
+	}
+
+	/**
+	 * Writes the junction jerk values to the EEPROM settings on the motherboard from a Point5d.
+	 * NOTE: X and Y have an integrated junction jerk, so the Y value will be ignored.
+	 * Jerks are stored in fixed-point Q16 (top 16 bits are integert, bottom 16 are fractional).
+	 */
+	@Override
+	public void setAxisJunctionJerks(Point5d jerks) {
+		// Point5d stepsPerMM = getMachine().getStepsPerMM();
+		int offset = 0;
+		for (int axis = 0; axis < 5; axis++) {
+			if (axis == 1)
+				continue;
+			double val = jerks.get(axis);
+			writeToEEPROM(MightyBoardEEPROM.EEPROM_AXIS_JUNCTION_JERK_OFFSET + (offset * 4), floatTo32LE((float)val));
+			offset++;
+		}
+	}
+
+	/**
+	 * Reads an double that contains the minimum planner speed.
+	 */
+	@Override
+	public double getMinimumPlannerSpeed() {
+		checkEEPROM();
+		byte[] defaultValue = floatTo32LE(4.0f);
+		byte[] r = readFromEEPROMwithDefault(
+				MightyBoardEEPROM.EEPROM_MINIMUM_PLANNER_SPEED_OFFSET, 4, defaultValue);
+
+		double val = byte32LEToFloat(r);
+		return val;
+	}
+
+	/**
+	 * Writes an double that contains the minimum planner speed to the motherboard EEPROM.
+	 */
+	@Override
+	public void setMinimumPlannerSpeed(double minPlannerSpeed) {
+		checkEEPROM();
+		writeToEEPROM(MightyBoardEEPROM.EEPROM_MINIMUM_PLANNER_SPEED_OFFSET, floatTo32LE((float)minPlannerSpeed));
+	}
+
 	@Override
 	public boolean setConnectedToolIndex(int index) {
 		byte[] data = new byte[1];
