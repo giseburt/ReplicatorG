@@ -81,6 +81,10 @@ public class MachineOnboardParameters extends JPanel {
 	private JFormattedTextField vref2 = new JFormattedTextField(threePlaces);
 	private JFormattedTextField vref3 = new JFormattedTextField(threePlaces);
 	private JFormattedTextField vref4 = new JFormattedTextField(threePlaces);
+        
+        private JFormattedTextField xToolheadOffsetField = new JFormattedTextField(threePlaces);
+        private JFormattedTextField yToolheadOffsetField = new JFormattedTextField(threePlaces);
+        private JFormattedTextField zToolheadOffsetField = new JFormattedTextField(threePlaces);
 	
 	private JFormattedTextField masterAcceleration = new JFormattedTextField(threePlaces);
 	
@@ -168,6 +172,12 @@ public class MachineOnboardParameters extends JPanel {
 			target.setStoredStepperVoltage(3, ((Number)vref3.getValue()).intValue());
 			target.setStoredStepperVoltage(4, ((Number)vref4.getValue()).intValue());
 		}
+                
+        target.eepromStoreToolDelta(0, ((Number)xToolheadOffsetField.getValue()).doubleValue());
+        target.eepromStoreToolDelta(1, ((Number)yToolheadOffsetField.getValue()).doubleValue());
+        target.eepromStoreToolDelta(2, ((Number)zToolheadOffsetField.getValue()).doubleValue());
+
+        requestResetFromUser();
 		
 		if(target.hasAccelerationSupport())
 		{
@@ -262,6 +272,12 @@ public class MachineOnboardParameters extends JPanel {
 			vref3.setValue(this.target.getStoredStepperVoltage(3));
 			vref4.setValue(this.target.getStoredStepperVoltage(4));
 		}
+
+		if(target.hasToolheadsOffset()) {
+			xToolheadOffsetField.setValue(this.target.getToolheadsOffset(0));
+			yToolheadOffsetField.setValue(this.target.getToolheadsOffset(1));
+			zToolheadOffsetField.setValue(this.target.getToolheadsOffset(2));
+		}    
 		
 		
 		if(target.hasAccelerationSupport())
@@ -385,6 +401,21 @@ public class MachineOnboardParameters extends JPanel {
 			add(bAxisHomeOffsetField,"spanx, wrap");
 		}
 
+		if(target.hasToolheadsOffset()) {
+		    xToolheadOffsetField.setColumns(10);
+		    yToolheadOffsetField.setColumns(10);
+		    zToolheadOffsetField.setColumns(10);
+		    
+		    add(new JLabel("X toolhead offset (mm)"));
+		    add(xToolheadOffsetField, "wrap");
+		    
+		    add(new JLabel("Y toolhead offset (mm)"));
+		    add(yToolheadOffsetField, "wrap");
+		    
+		    add(new JLabel("Z toolhead offset (mm)"));
+		    add(zToolheadOffsetField, "wrap");
+		}
+
 		if(target.hasAccelerationSupport())
 		{
 			masterAcceleration.setColumns(4);
@@ -445,7 +476,7 @@ public class MachineOnboardParameters extends JPanel {
 //				loadParameters();
 			}
 		});
-		resetToFactoryButton.setToolTipText("Reest the onboard settings to the factory defaults");
+		resetToFactoryButton.setToolTipText("Reset the onboard settings to the factory defaults");
 		add(resetToFactoryButton, "span 4, split 3");
 
 		
@@ -459,7 +490,7 @@ public class MachineOnboardParameters extends JPanel {
 //				loadParameters();
 			}
 		});
-		resetToBlankButton.setToolTipText("Reset the onboard settings to *completely blank*!");
+		resetToBlankButton.setToolTipText("Reset the onboard settings to *completely blank*");
 		add(resetToBlankButton);
 
 		commitButton.addActionListener(new ActionListener() {
