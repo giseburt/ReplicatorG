@@ -18,6 +18,7 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.JTabbedPane;
 
 import net.miginfocom.swing.MigLayout;
 import replicatorg.app.Base;
@@ -36,6 +37,7 @@ public class MachineOnboardParameters extends JPanel {
 	private final OnboardParameters target;
 	private final Driver driver;
 	private final JFrame parent;
+	private final JTabbedPane subTabs;
 	
 	private JTextField machineNameField = new JTextField();
 	private static final String[] toolCountChoices = {"unavailable","1", "2"};
@@ -51,8 +53,8 @@ public class MachineOnboardParameters extends JPanel {
 	private JButton commitButton = new JButton("Commit Changes");
 	private static final String[]  endstopInversionChoices = {
 		"No endstops installed",
-		"Inverted (Default; Mechanical switch or H21LOB-based enstops)",
-		"Non-inverted (H21LOI-based endstops)"
+		"Inverted (Default)",
+		"Non-inverted"
 	};
 	private JComboBox endstopInversionSelection = new JComboBox(endstopInversionChoices);
 	private static final String[]  estopChoices = {
@@ -310,48 +312,65 @@ public class MachineOnboardParameters extends JPanel {
 		this.driver = driver;
 		this.parent = parent;
 		
-		setLayout(new MigLayout("fill", "[r][l][r][l]"));
-		EnumMap<AxisId, String> axesAltNamesMap = target.getAxisAlises();
+		setLayout(new MigLayout("fill", "[r][l][r]"));
 
 		add(new JLabel("Machine Name (max. "+Integer.toString(MAX_NAME_LENGTH)+" chars)"));
 		machineNameField.setColumns(MAX_NAME_LENGTH);
 		add(machineNameField,"spanx, wrap");
 
+		subTabs = new JTabbedPane();
+		add(subTabs, "span 3, wrap");
+
+		JPanel endstopsTab = new JPanel(new MigLayout("fill", "[r][l][r][l]"));
+		subTabs.addTab("Endstops/Axis Inversion", endstopsTab);
+
+		JPanel homeVrefsTab = new JPanel(new MigLayout("fill", "[r][l][r][l]"));
+		if(target.hasVrefSupport())
+		{
+			subTabs.addTab("Homing/VREFs", homeVrefsTab);
+		} else {
+			subTabs.addTab("Homing", homeVrefsTab);
+		}
+		
+		EnumMap<AxisId, String> axesAltNamesMap = target.getAxisAlises();
+
   		if( target.hasToolCountOnboard() ) {
-  			add(new JLabel("Reported Tool Count:"));
-  			add(toolCountField, "spanx, wrap");
+  			endstopsTab.add(new JLabel("Reported Tool Count:"));
+  			endstopsTab.add(toolCountField, "spanx, wrap");
   		}
 		
 		
-		add(new JLabel("Invert X axis"));		
-		add(xAxisInvertBox,"spanx, wrap");
+		endstopsTab.add(new JLabel("Invert X axis"));		
+		endstopsTab.add(xAxisInvertBox,"spanx, wrap");
 		
-		add(new JLabel("Invert Y axis"));
-		add(yAxisInvertBox,"spanx, wrap");
+		endstopsTab.add(new JLabel("Invert Y axis"));
+		endstopsTab.add(yAxisInvertBox,"spanx, wrap");
 		
-		add(new JLabel("Invert Z axis"));
-		add(zAxisInvertBox,"spanx, wrap");
+		endstopsTab.add(new JLabel("Invert Z axis"));
+		endstopsTab.add(zAxisInvertBox,"spanx, wrap");
 
 		String aName = "Invert A axis";
 		if( axesAltNamesMap.containsKey(AxisId.A) )
 			aName = aName + " (" + axesAltNamesMap.get(AxisId.A) + ") ";
-		add(new JLabel(aName));
-		add(aAxisInvertBox,"spanx, wrap");
+		endstopsTab.add(new JLabel(aName));
+		endstopsTab.add(aAxisInvertBox,"spanx, wrap");
 		
 		String bName = "Invert B axis";
 		if( axesAltNamesMap.containsKey(AxisId.B) )
 			bName = bName + " (" + axesAltNamesMap.get(AxisId.B) + ") ";
-		add(new JLabel(bName));
-		add(bAxisInvertBox,"spanx, wrap");
+		endstopsTab.add(new JLabel(bName));
+		endstopsTab.add(bAxisInvertBox,"spanx, wrap");
 
-		add(new JLabel("Hold Z axis"));
-		add(zHoldBox,"spanx, wrap");
+		endstopsTab.add(new JLabel("Hold Z axis"));
+		endstopsTab.add(zHoldBox,"spanx, wrap");
 
-		add(new JLabel("Invert endstops"));
-		add(endstopInversionSelection,"spanx, wrap");
+		endstopsTab.add(new JLabel("Invert endstops"));
+		endstopsTab.add(endstopInversionSelection,"spanx, wrap");
+		endstopsTab.add(new JLabel("<html><b>Inverted</b> is for mechanical switch or H21LOB-based enstops.</html>"), "skip, wrap");
+		endstopsTab.add(new JLabel("<html><b>Non-inverted</b> is for H21LOI-based endstops.</html>"), "skip, wrap");
 
-		add(new JLabel("Emergency stop"));
-		add(estopSelection,"spanx, wrap");
+		endstopsTab.add(new JLabel("Emergency stop"));
+		endstopsTab.add(estopSelection,"spanx, wrap");
 		
 		xAxisHomeOffsetField.setColumns(10);
 		yAxisHomeOffsetField.setColumns(10);
@@ -366,39 +385,39 @@ public class MachineOnboardParameters extends JPanel {
 			vref2.setColumns(4);
 			vref3.setColumns(4);
 			vref4.setColumns(4);
-			add(new JLabel("X home offset (mm)"));
-			add(xAxisHomeOffsetField);
-			add(new JLabel("VREF Pot. 0"));
-			add(vref0, "wrap");
-			add(new JLabel("Y home offset (mm)"));
-			add(yAxisHomeOffsetField);
-			add(new JLabel("VREF Pot. 1"));
-			add(vref1, "wrap");
-			add(new JLabel("Z home offset (mm)"));
-			add(zAxisHomeOffsetField);
-			add(new JLabel("VREF Pot. 2"));
-			add(vref2, "wrap");
-			add(new JLabel("A home offset (mm)"));
-			add(aAxisHomeOffsetField);
-			add(new JLabel("VREF Pot. 3"));
-			add(vref3, "wrap");
-			add(new JLabel("B home offset (mm)"));
-			add(bAxisHomeOffsetField);
-			add(new JLabel("VREF Pot. 4"));
-			add(vref4, "wrap");
+			homeVrefsTab.add(new JLabel("X home offset (mm)"));
+			homeVrefsTab.add(xAxisHomeOffsetField);
+			homeVrefsTab.add(new JLabel("VREF Pot. 0"));
+			homeVrefsTab.add(vref0, "wrap");
+			homeVrefsTab.add(new JLabel("Y home offset (mm)"));
+			homeVrefsTab.add(yAxisHomeOffsetField);
+			homeVrefsTab.add(new JLabel("VREF Pot. 1"));
+			homeVrefsTab.add(vref1, "wrap");
+			homeVrefsTab.add(new JLabel("Z home offset (mm)"));
+			homeVrefsTab.add(zAxisHomeOffsetField);
+			homeVrefsTab.add(new JLabel("VREF Pot. 2"));
+			homeVrefsTab.add(vref2, "wrap");
+			homeVrefsTab.add(new JLabel("A home offset (mm)"));
+			homeVrefsTab.add(aAxisHomeOffsetField);
+			homeVrefsTab.add(new JLabel("VREF Pot. 3"));
+			homeVrefsTab.add(vref3, "wrap");
+			homeVrefsTab.add(new JLabel("B home offset (mm)"));
+			homeVrefsTab.add(bAxisHomeOffsetField);
+			homeVrefsTab.add(new JLabel("VREF Pot. 4"));
+			homeVrefsTab.add(vref4, "wrap");
 		}
 		else
 		{
-			add(new JLabel("X home offset (mm)"));
-			add(xAxisHomeOffsetField,"spanx, wrap");
-			add(new JLabel("Y home offset (mm)"));
-			add(yAxisHomeOffsetField,"spanx, wrap");
-			add(new JLabel("Z home offset (mm)"));
-			add(zAxisHomeOffsetField,"spanx, wrap");
-			add(new JLabel("A home offset (mm)"));
-			add(aAxisHomeOffsetField,"spanx, wrap");
-			add(new JLabel("B home offset (mm)"));
-			add(bAxisHomeOffsetField,"spanx, wrap");
+			homeVrefsTab.add(new JLabel("X home offset (mm)"));
+			homeVrefsTab.add(xAxisHomeOffsetField,"spanx, wrap");
+			homeVrefsTab.add(new JLabel("Y home offset (mm)"));
+			homeVrefsTab.add(yAxisHomeOffsetField,"spanx, wrap");
+			homeVrefsTab.add(new JLabel("Z home offset (mm)"));
+			homeVrefsTab.add(zAxisHomeOffsetField,"spanx, wrap");
+			homeVrefsTab.add(new JLabel("A home offset (mm)"));
+			homeVrefsTab.add(aAxisHomeOffsetField,"spanx, wrap");
+			homeVrefsTab.add(new JLabel("B home offset (mm)"));
+			homeVrefsTab.add(bAxisHomeOffsetField,"spanx, wrap");
 		}
 
 		if(target.hasToolheadsOffset()) {
@@ -406,18 +425,21 @@ public class MachineOnboardParameters extends JPanel {
 		    yToolheadOffsetField.setColumns(10);
 		    zToolheadOffsetField.setColumns(10);
 		    
-		    add(new JLabel("X toolhead offset (mm)"));
-		    add(xToolheadOffsetField, "wrap");
+		    homeVrefsTab.add(new JLabel("X toolhead offset (mm)"));
+		    homeVrefsTab.add(xToolheadOffsetField, "spanx, wrap");
 		    
-		    add(new JLabel("Y toolhead offset (mm)"));
-		    add(yToolheadOffsetField, "wrap");
+		    homeVrefsTab.add(new JLabel("Y toolhead offset (mm)"));
+		    homeVrefsTab.add(yToolheadOffsetField, "spanx, wrap");
 		    
-		    add(new JLabel("Z toolhead offset (mm)"));
-		    add(zToolheadOffsetField, "wrap");
+		    homeVrefsTab.add(new JLabel("Z toolhead offset (mm)"));
+		    homeVrefsTab.add(zToolheadOffsetField, "spanx, wrap");
 		}
 
 		if(target.hasAccelerationSupport())
 		{
+			JPanel accelerationTab = new JPanel(new MigLayout("fill", "[r][l][r][l]"));
+			subTabs.addTab("Acceleration", accelerationTab);
+
 			masterAcceleration.setColumns(4);
 			minimumPlannerSpeed.setColumns(4);
 			
@@ -435,34 +457,34 @@ public class MachineOnboardParameters extends JPanel {
 			bAxisAcceleration.setColumns(8);
 			bJunctionJerk.setColumns(4);
 
-			add(new JLabel("Master acceleration rate (mm/s/s)"));
-			add(masterAcceleration, "spanx, wrap");
+			accelerationTab.add(new JLabel("Master acceleration rate (mm/s/s)"));
+			accelerationTab.add(masterAcceleration, "spanx, wrap");
 
-			add(new JLabel("Deceleration minimum speed (mm/s)"));
-			add(minimumPlannerSpeed, "spanx, wrap");
+			accelerationTab.add(new JLabel("Deceleration minimum speed (mm/s)"));
+			accelerationTab.add(minimumPlannerSpeed, "spanx, wrap");
 			
-			add(new JLabel("X acceleration rate (mm/s/s)"));
-			add(xAxisAcceleration);
-			add(new JLabel("X/Y max junction jerk (mm/s)"));
-			add(xyJunctionJerk, "wrap");
+			accelerationTab.add(new JLabel("X acceleration rate (mm/s/s)"));
+			accelerationTab.add(xAxisAcceleration);
+			accelerationTab.add(new JLabel("X/Y max junction jerk (mm/s)"));
+			accelerationTab.add(xyJunctionJerk, "wrap");
 
-			add(new JLabel("Y acceleration rate (mm/s/s)"));
-			add(yAxisAcceleration, "spanx, wrap");
+			accelerationTab.add(new JLabel("Y acceleration rate (mm/s/s)"));
+			accelerationTab.add(yAxisAcceleration, "spanx, wrap");
 
-			add(new JLabel("Z acceleration rate (mm/s/s)"));
-			add(zAxisAcceleration);
-			add(new JLabel("Z maximum junction jerk (mm/s)"));
-			add(zJunctionJerk, "wrap");
+			accelerationTab.add(new JLabel("Z acceleration rate (mm/s/s)"));
+			accelerationTab.add(zAxisAcceleration);
+			accelerationTab.add(new JLabel("Z maximum junction jerk (mm/s)"));
+			accelerationTab.add(zJunctionJerk, "wrap");
 
-			add(new JLabel("A acceleration rate (mm/s/s)"));
-			add(aAxisAcceleration);
-			add(new JLabel("A maximum junction jerk (mm/s)"));
-			add(aJunctionJerk, "wrap");
+			accelerationTab.add(new JLabel("A acceleration rate (mm/s/s)"));
+			accelerationTab.add(aAxisAcceleration);
+			accelerationTab.add(new JLabel("A maximum junction jerk (mm/s)"));
+			accelerationTab.add(aJunctionJerk, "wrap");
 
-			add(new JLabel("B acceleration rate (mm/s/s)"));
-			add(bAxisAcceleration);
-			add(new JLabel("B maximum junction jerk (mm/s)"));
-			add(bJunctionJerk, "wrap");
+			accelerationTab.add(new JLabel("B acceleration rate (mm/s/s)"));
+			accelerationTab.add(bAxisAcceleration);
+			accelerationTab.add(new JLabel("B maximum junction jerk (mm/s)"));
+			accelerationTab.add(bJunctionJerk, "wrap");
 		}
 
 		
@@ -477,7 +499,7 @@ public class MachineOnboardParameters extends JPanel {
 			}
 		});
 		resetToFactoryButton.setToolTipText("Reset the onboard settings to the factory defaults");
-		add(resetToFactoryButton, "span 4, split 3");
+		add(resetToFactoryButton, "al left");
 
 		
 		resetToBlankButton.addActionListener(new ActionListener() {
@@ -491,7 +513,7 @@ public class MachineOnboardParameters extends JPanel {
 			}
 		});
 		resetToBlankButton.setToolTipText("Reset the onboard settings to *completely blank*");
-		add(resetToBlankButton);
+		add(resetToBlankButton, "al center");
 
 		commitButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
