@@ -1,3 +1,19 @@
+0034-Beta ReplicatorG
+ * Updated t0 to t1 tolerance code 
+
+0033 ReplicatorG
+* Updated version number to avoid confusion
+* Minor UI changes
+
+0032 ReplicatorG 
+* Extensive polishing of ReplicatorG
+* Set various settings as the new default, such as Skeinforge47, etc
+
+0031 ReplicatorG
+* Updated start and end gcode
+* Fixed dual extrusion bugs
+* Full support for skeinforge 47
+
 0031_Beta ReplicatorG
 * Extensive Rewrite of RepG to support The Replicator
 * Post Processing of Skeinforge changes added

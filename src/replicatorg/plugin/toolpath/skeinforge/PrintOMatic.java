@@ -176,7 +176,7 @@ public class PrintOMatic implements SkeinforgePreference,ProfileWatcher {
 		desiredLayerHeight = ".30";
 		numberOfShells = "1";
 		desiredFeedrate = "40";
-		filamentDiameter = "1.85";
+		filamentDiameter = "1.82";
 		nozzleDiameter = ".4";
 		driveGearDiameter = "10.58";
 	}}
@@ -187,7 +187,7 @@ public class PrintOMatic implements SkeinforgePreference,ProfileWatcher {
 		desiredLayerHeight = ".30";
 		numberOfShells = "1";
 		desiredFeedrate = "30";
-		filamentDiameter = "1.8";
+		filamentDiameter = "1.82";
 		nozzleDiameter = ".4";
 		driveGearDiameter = "10.58";
 	}}
@@ -220,11 +220,11 @@ public class PrintOMatic implements SkeinforgePreference,ProfileWatcher {
 		
 		addTextParameter(printPanel, "desiredLayerHeight",
 				"Layer Height (mm)", defaults.desiredLayerHeight,
-				"Set the desired feedrate");
+				"Sets thickness for plastic layers");
 
 		addTextParameter(printPanel, "numberOfShells",
 				"Number of shells:", defaults.numberOfShells,
-				"Number of shells to add to the perimeter of an object. Set this to 0 if you are printing a model with thin features.");
+				"Number of shells to add to the perimeter of an object. Set this to 0 if you are printing a model with thin features");
 		
 		addTextParameter(printPanel, "desiredFeedrate",
 				"Feedrate (mm/s)", defaults.desiredFeedrate,

@@ -129,7 +129,7 @@ class ConfigurationDialog extends JDialog implements Profile.ProfileChangedWatch
 		saveButton.setEnabled(false);
 		saveAsButton.setEnabled(true);
 		
-		add(new JLabel("Base Profile:"), "split 2");
+		add(new JLabel("Slicing Profile:"), "split 2");
 		loadList(prefPulldown);
 		prefPulldown.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
@@ -148,33 +148,16 @@ class ConfigurationDialog extends JDialog implements Profile.ProfileChangedWatch
 				}
 			}
 		});
-		add(prefPulldown, "wrap, growx");
+		add(prefPulldown, "wrap, growx, gapbottom 10");
 
 		for (SkeinforgePreference preference: parentGenerator.getPreferences()) {
 			add(preference.getUI(), "growx, wrap");
 		}
 
-		final JCheckBox autoGen = new JCheckBox("Automatically generate when building.");
-		autoGen.setToolTipText("When building from the model view with this checked " +
-				"GCode will automatically be generated, bypassing this dialog.");
-		add(autoGen, "wrap");
-		autoGen.addActionListener(new ActionListener(){
-			@Override
-			public void actionPerformed(ActionEvent arg0) {
-				Base.preferences.putBoolean("build.autoGenerateGcode", autoGen.isSelected());
-			}
-		});
-		autoGen.setSelected(Base.preferences.getBoolean("build.autoGenerateGcode", false));
-		
-		add(prefPulldown, "wrap, growx");
-
-		for (SkeinforgePreference preference: parentGenerator.preferences) {
-			add(preference.getUI(), "wrap");
-		}
-
 		add(cancelButton, "tag cancel, split 4");
 		add(saveButton, "tag finish");
 		add(saveAsButton, "tag finish");
+		generateButton.setToolTipText("Generates GCode instructions for your machine.");
 		add(generateButton, "tag ok");
 
 		generateButton.addActionListener(new ActionListener() {

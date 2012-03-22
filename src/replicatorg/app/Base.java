@@ -35,7 +35,6 @@ import java.awt.Font;
 import java.awt.Image;
 import java.awt.MediaTracker;
 import java.awt.Toolkit;
-//import java.awt.TrayIcon;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
@@ -100,7 +99,7 @@ public class Base {
 	/**
 	 * The version number of this edition of replicatorG.
 	 */
-	public static final int VERSION = 31;
+	public static final int VERSION = 34;
 	
 	/**
 	 * The textual representation of this version (4 digits, zero padded).
@@ -194,7 +193,20 @@ public class Base {
 	 * set.
 	 */
 	static private String alternatePrefs = null;
-	
+
+	/**
+	 * Set the name of the alternate preferences to use. This will reload
+	 * the preferences. It must be called only from the main method before
+	 * any preference values are used.
+	 *
+	 * @param name the alternate preferences name.
+	 */
+	public static void setAlternatePrefs(final String name)
+	{
+		alternatePrefs = name;
+		preferences = getUserPreferences();
+	}
+
 	/**
 	 * Get the preferences node for ReplicatorG.
 	 */
@@ -204,6 +216,25 @@ public class Base {
 			prefs = prefs.node("alternate/"+alternatePrefs);
 		}
 		return prefs;
+	}
+	
+	static private void moveAll(File source, File target) {
+		try {
+			if (source.isDirectory()) {
+				if (!target.exists()) {
+					target.mkdir();
+				}
+				for (String s : source.list()) {
+					moveAll(new File(source, s), new File(target, s));
+				}
+				source.delete();
+			}
+			else if (source.isFile()) {
+				source.renameTo(target);
+			}
+		} catch (Exception e) {
+			Base.logger.severe(e.getMessage());
+		}
 	}
 	
 	/**
@@ -217,6 +248,15 @@ public class Base {
 		} catch (BackingStoreException bse) {
 			bse.printStackTrace();
 		}
+		File userDir = getUserDirectory();
+		try {
+			// Create backup
+			File backupDir = new File(userDir.getParentFile(),".replicatorg-backup-" + Long.toString(System.nanoTime()) );
+			backupDir.mkdir();
+			moveAll(userDir,backupDir);
+		} catch (Exception e) {
+			Base.logger.severe(e.getMessage());
+		}
 	}
 	
 	/**
@@ -227,8 +267,8 @@ public class Base {
 	static public String getToolsPath() {
 	    String toolsDir = System.getProperty("replicatorg.toolpath");
 	    if (toolsDir == null || (toolsDir.length() == 0)) {
-		    String path = System.getProperty("user.dir");
-	    	toolsDir = path + File.separator + "tools";
+		    File appDir = Base.getApplicationDirectory();
+	    	toolsDir = appDir.getAbsolutePath() + File.separator + "tools";
 	    }
 	    return toolsDir;
 	}
@@ -248,12 +288,33 @@ public class Base {
 		return dir;
 	}
 	
+	/** 
+	 * Retrieves the application data directory via OS specific voodoo.
+	 * Defaults to the current directory if no os specific settings exist, 
+	 * @return File object pointing to the OS specific ApplicationsDirectory
+	 */
 	static public File getApplicationDirectory() {
+		if( isMacOS() ) { 
+			try { 
+				File x = new File(".");
+				String baseDir = x.getCanonicalPath();
+				//baseDir = baseDir + "/ReplicatorG.app/Contents/Resources";
+				//Base.logger.severe("OSX AppDir at " + baseDir );
+				//we want to use ReplicatorG.app/Content as our app dir.
+				if(new File(baseDir + "/ReplicatorG.app/Contents/Resources").exists())
+					return new File(baseDir + "/ReplicatorG.app/Contents/Resources");
+				else
+					return new File(baseDir);
+				}
+			catch (java.io.IOException e) {
+				// This space intentionally left blank. Fall through.
+			}
+		}
 		return new File(System.getProperty("user.dir"));
 	}
 	
 	static public File getApplicationFile(String path) {
-		return new File(getApplicationDirectory(),path);
+		return new File(getApplicationDirectory(), path);
 	}
 
 	static public File getUserFile(String path) {
@@ -400,7 +461,7 @@ public class Base {
 			if (args[i].equals("--alternate-prefs")) {
 				if((i+1) < args.length) {
 					i++;
-					alternatePrefs = args[i];
+					setAlternatePrefs(args[i]);
 				}
 			} else if (args[i].equals("--clean-prefs")) {
 				cleanPrefs = true;
@@ -438,6 +499,7 @@ public class Base {
 			}
 		}
 		
+
 		// Use the default system proxy settings
 		System.setProperty("java.net.useSystemProxies", "true");
     	// Use antialiasing implicitly
@@ -890,8 +952,8 @@ public class Base {
 	}
 
 	static public String getContents(String what) {
-		String basePath = System.getProperty("user.dir");
-		return basePath + File.separator + what;
+		File appBase = 	Base.getApplicationDirectory();
+		return appBase.getAbsolutePath() + File.separator + what;
 	}
 
 	static public String getLibContents(String what) {

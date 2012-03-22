@@ -271,14 +271,15 @@ public class DualStrusionConstruction
 				
 				//collect every command up to the end of the layer 
 				final List<String> accumulate = new ArrayList<String>();
-				String next = it.next();
+//				String next = it.next(); actually, let's keep the initial layer tag
+				String next = line;
 				while(!next.startsWith("(</layer>)"))
 				{
 					accumulate.add(next);
 					next = it.next();
 				}
 				//skip empty layers
-				if(!accumulate.isEmpty())
+				if(accumulate.size() > 1)
 					result.add(new Layer(layerHeight, accumulate));
 			}
 		}

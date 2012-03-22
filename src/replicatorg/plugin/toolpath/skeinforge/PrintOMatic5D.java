@@ -238,13 +238,38 @@ public class PrintOMatic5D implements SkeinforgePreference,ProfileWatcher {
 		target.add(input, "wrap");
 		profileWatchers.add(input);
 		
-		if (toolTip != null) {
-			// TODO: This is wrong.
-			input.setToolTipText(toolTip);
-		}
-		
+		return value;
 	}
-
+	
+	private String getStringValue(String optionName) {
+		// TODO: record the default values somewhere, so that we can retrieve them here!
+		String value = Base.preferences.get(baseName + optionName, null);
+		
+		Base.logger.fine("Saved value for preference " + baseName + optionName + " is " + value);
+		
+		return value;
+	}
+	
+//	private double getScalingFactor() {
+//		// TODO: record the default values somewhere, so that we can retrieve them here!
+//		String value = Base.preferences.get(baseName + "materialType", null);
+//		
+//		double scalingFactor = 1;
+//		
+//		if (value.equals("ABS")) {
+//			scalingFactor = .85;
+//		}
+//		else if (value.equals("PLA")) {
+//			scalingFactor = 1;
+//		}
+//		else {
+//			Base.logger.severe("Couldn't determine scaling factor for material " + value + ", defaulting to 1");
+//		}
+//		
+//		return scalingFactor;
+//	}
+	
+	
 	JTabbedPane printOMatic5D;
 
 	boolean processingProfileChange;
@@ -255,6 +280,13 @@ public class PrintOMatic5D implements SkeinforgePreference,ProfileWatcher {
 		
 		baseName = "replicatorg.skeinforge.printOMatic5D.";
 		
+//		Vector<String> materialTypes = new Vector<String>();
+//		materialTypes.add("ABS");
+//		materialTypes.add("PLA");
+//		
+//		addDropDownParameter(materialPanel, "materialType",
+//				"Material type:", materialTypes,
+//				"Select the type of plastic to use during print");
 		
 		final JLabel profileInfo = new JLabel("");
 		component.add(profileInfo, "wrap, spanx, align center");
@@ -283,7 +315,7 @@ public class PrintOMatic5D implements SkeinforgePreference,ProfileWatcher {
 		
 		// Add a checkbox to switch print-o-matic on and off
 		final String enabledName = baseName + "enabled";
-		enabled = new JCheckBox("Use Print-O-Matic (stepper extruders only)", Base.preferences.getBoolean(enabledName,false));
+		enabled = new JCheckBox("Use Print-O-Matic (stepper extruders only)", Base.preferences.getBoolean(enabledName,true));
 		enabled.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				if (enabledName != null) {
