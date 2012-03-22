@@ -145,6 +145,7 @@ public class MachineOnboardParameters extends JPanel {
 		// V is in the 7th bit position, and it's set to NOT hold Z
 		// From the firmware: "Bit 7 is used for HoldZ OFF: 1 = off, 0 = on"
 		if ( !zHoldBox.isSelected() )	axesInverted.add(AxisId.V);
+              
 
 		target.setInvertedAxes(axesInverted);
 		{
@@ -253,6 +254,7 @@ public class MachineOnboardParameters extends JPanel {
 		aAxisInvertBox.setSelected(invertedAxes.contains(AxisId.A));
 		bAxisInvertBox.setSelected(invertedAxes.contains(AxisId.B));
 		zHoldBox.setSelected(     !invertedAxes.contains(AxisId.V));
+                
 		// 0 == inverted, 1 == not inverted
 		OnboardParameters.EndstopType endstops = this.target.getInvertedEndstops();
 		endstopInversionSelection.setSelectedIndex(endstops.ordinal());

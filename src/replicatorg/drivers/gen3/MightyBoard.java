@@ -258,6 +258,7 @@ public class MightyBoard extends Makerbot4GAlternateDriver
 	private int toolCountOnboard = -1; /// no count aka FFFF
 	
 	Version toolVersion = new Version(0,0);
+        Version accelerationVersion = new Version(0,0);
 
 	/** 
 	 * Standard Constructor
@@ -274,6 +275,7 @@ public class MightyBoard extends Makerbot4GAlternateDriver
 		// firmware version we want this driver to support.
 		minimumVersion = new Version(5,2);
 		preferredVersion = new Version(5,2);
+                minimumAccelerationVersion = new Version(9,3);
 
 	}
 	
@@ -1514,7 +1516,31 @@ public class MightyBoard extends Makerbot4GAlternateDriver
 				s = s >>> 8;
 		}
 		writeToEEPROM(offset,buf);
-}
+        }
+        
+        /// read a 16 bit int from EEPROM at location 'offset'
+	private int read16FromEEPROM(int offset)
+	{
+		int val = 0;
+		byte[] r = readFromEEPROM(offset, 2);
+		if( r == null || r.length < 2) {
+			Base.logger.severe("invalid read from read16FromEEPROM at "+ offset);
+			return val;
+		}
+		for (int i = 0; i < 2; i++)
+			val = val + (((int)r[i] & 0xff) << 8*i);
+		return val;
+	}
+
+	private void write16ToEEPROM(int offset, int value ) {
+		int s = value;
+		byte buf[] = new byte[2];
+		for (int i = 0; i < 2; i++) {
+			buf[i] = (byte) (s & 0xff);
+				s = s >>> 8;
+		}
+		writeToEEPROM(offset,buf);
+        }
 
 
 	
