@@ -128,7 +128,7 @@ public class PrintOMatic5D implements SkeinforgePreference,ProfileWatcher {
 			Double number = -0.99; // clear indication of an error
 			try {
 				if (text != null)
-					number = (Double)numberFormat.parse(text);
+					number = (Double)numberFormat.parse(text).doubleValue();
 			}
 			catch (java.text.ParseException e) {
 				Base.logger.severe("Print-O-Matic setting " + optionName + " does not contain a valid number, please correct this!");
