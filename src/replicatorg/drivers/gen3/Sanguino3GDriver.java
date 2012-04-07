@@ -116,7 +116,7 @@ public class Sanguino3GDriver extends SerialDriver implements
 
 	private boolean eepromChecked = false;
         
-        protected boolean acceleratedFirmware = false;
+	protected boolean acceleratedFirmware = true;
 
 	public Sanguino3GDriver() {
 		super();
@@ -147,10 +147,10 @@ public class Sanguino3GDriver extends SerialDriver implements
 				// Default timeout should be 2.6s. Timeout can be sped up for
 				// v2, but let's play it safe.
 				int timeout = 2600;
-                                // dial down timeout for accelerated firmware so that we can refill
-                                // firmware command buffer as quickly as possible
-                                if(acceleratedFirmware)
-                                    timeout = 200;
+				// dial down timeout for accelerated firmware so that we can refill
+				// firmware command buffer as quickly as possible
+				if(acceleratedFirmware)
+					timeout = 200;
 				connectToDevice(timeout);
 			} catch (Exception e) {
 				// todo: handle init exceptions here
@@ -431,17 +431,17 @@ public class Sanguino3GDriver extends SerialDriver implements
 						break;
 					}
 					if (retries > 1) {
-                                            
-                                            // accelerated Firmware has a low timeout period and times out frequently
-                                            // dial down timeout logging because there will be a LOT of it
-                                            if(acceleratedFirmware){
-						Base.logger.finest("Read timed out; retries remaining: "
-										+ Integer.toString(retries));
-                                            }
-                                            else{
-                                                Base.logger.severe("Read timed out; retries remaining: "
-										+ Integer.toString(retries));
-                                            }
+
+						// accelerated Firmware has a low timeout period and times out frequently
+						// dial down timeout logging because there will be a LOT of it
+						if(acceleratedFirmware){
+							Base.logger.finest("Read timed out; retries remaining: "
+								+ Integer.toString(retries));
+						}
+						else{
+							Base.logger.severe("Read timed out; retries remaining: "
+								+ Integer.toString(retries));
+						}
 					}
 					if (retries == -1) {
 						// silently return a timeout response
@@ -1947,17 +1947,18 @@ public class Sanguino3GDriver extends SerialDriver implements
 					return;
 				if ((versionBytes[0] != Sanguino3GEEPRPOM.EEPROM_CHECK_LOW)
 						|| (versionBytes[1] != Sanguino3GEEPRPOM.EEPROM_CHECK_HIGH)) {
-					Base.logger.severe("Cleaning EEPROM to v1.X state");
-					// Wipe EEPROM
-					byte eepromWipe[] = new byte[16];
-					Arrays.fill(eepromWipe, (byte) 0x00);
-					eepromWipe[0] = Sanguino3GEEPRPOM.EEPROM_CHECK_LOW;
-					eepromWipe[1] = Sanguino3GEEPRPOM.EEPROM_CHECK_HIGH;
-					writeToEEPROM(0, eepromWipe);
-					Arrays.fill(eepromWipe, (byte) 0x00);
-					for (int i = 16; i < 256; i += 16) {
-						writeToEEPROM(i, eepromWipe);
-					}
+					Base.logger.severe("EEPROM needs reset!");
+					// Base.logger.severe("Cleaning EEPROM to v1.X state");
+					// // Wipe EEPROM
+					// byte eepromWipe[] = new byte[16];
+					// Arrays.fill(eepromWipe, (byte) 0x00);
+					// eepromWipe[0] = Sanguino3GEEPRPOM.EEPROM_CHECK_LOW;
+					// eepromWipe[1] = Sanguino3GEEPRPOM.EEPROM_CHECK_HIGH;
+					// writeToEEPROM(0, eepromWipe);
+					// Arrays.fill(eepromWipe, (byte) 0x00);
+					// for (int i = 16; i < 256; i += 16) {
+					// 	writeToEEPROM(i, eepromWipe);
+					// }
 				}
 			}
 		}

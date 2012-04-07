@@ -102,12 +102,13 @@ public class PrintOMatic5D implements SkeinforgePreference,ProfileWatcher {
 	
 	private class TextFieldPercentModifier implements ProfileSavingTextField.TextValueModifier {
 		String optionName = null;
-		final DecimalFormat numberFormat = new DecimalFormat();
+		final DecimalFormat numberFormat = new DecimalFormat("####.##");
 		
 		TextFieldPercentModifier(String name) {
 			optionName = name;
-			numberFormat.setMinimumFractionDigits(0);
-			numberFormat.setMaximumFractionDigits(2);
+			// numberFormat.setMaximumIntegerDigits(3);
+			// numberFormat.setMinimumFractionDigits(0);
+			// numberFormat.setMaximumFractionDigits(2);
 			numberFormat.setMultiplier(100);
 		}
 		
@@ -237,8 +238,6 @@ public class PrintOMatic5D implements SkeinforgePreference,ProfileWatcher {
 		final ProfileSavingCheckBox input = new ProfileSavingCheckBox(name);
 		target.add(input, "wrap");
 		profileWatchers.add(input);
-		
-		return value;
 	}
 	
 	private String getStringValue(String optionName) {

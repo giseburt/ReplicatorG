@@ -259,6 +259,7 @@ public abstract class SkeinforgeGenerator extends ToolpathGenerator {
 		private File profileFile;
 		private Map<String,String> settingMap = new HashMap<String,String>();
 		private Map<String,String> overrideMap = new HashMap<String,String>();
+		private Map<String,String> gcodeKeyMap = new HashMap<String,String>();
 		// subProfiles -- such as ABS, PLA, PVA, etc. These have arbitray names, BTW.
 		private LinkedList<String> subProfiles = new LinkedList<String>();
 		// targetMachines is a filter that will allow this profile to only be show for specified machines
@@ -330,6 +331,12 @@ public abstract class SkeinforgeGenerator extends ToolpathGenerator {
 			} else {
 				
 			}
+			
+			// Add minimal gcode key mappings for the post processor
+			gcodeKeyMap.put("chamber.bedTemperature", "chamber.csv:Bed Temperature (Celcius):");
+			gcodeKeyMap.put("temperature.baseTemperature", "temperature.csv:Base Temperature (Celcius):");
+			gcodeKeyMap.put("temperature.objectFirstLayerInfillTemperature", "temperature.csv:Object First Layer Infill Temperature (Celcius):");
+			gcodeKeyMap.put("temperature.objectFirstLayerPerimeterTemperature", "temperature.csv:Object First Layer Perimeter Temperature (Celcius):");
 		}
 		
 		public Set<String> getTargetMachines() {
@@ -386,12 +393,18 @@ public abstract class SkeinforgeGenerator extends ToolpathGenerator {
 		}
 
 		public String getValueForPlastic(String key) {
-			String value = getValue(key);
+			String finalKey = key;
+			// check for gcode-style key
+			if (gcodeKeyMap.containsKey(key)) {
+				finalKey = gcodeKeyMap.get(key);
+			}
+			
+			String value = getValue(finalKey);
 			if (value == null) {
 				String profilePlastic = getValue("extrusion.csv:Profile Selection:");
 				// Base.logger.log(Level.FINEST, "Profile Selection: " + profilePlastic);
 				if (profilePlastic != null)
-					value = getValue(profilePlastic + "/" + key);
+					value = getValue(profilePlastic + "/" + finalKey);
 			}
 			return value;
 		}
@@ -402,6 +415,7 @@ public abstract class SkeinforgeGenerator extends ToolpathGenerator {
 
 		// We want to be smart here, so if we go to set it to the current value, don't add a key to overrideMap
 		// Likewise, is we are setting it back to what's in the profiles, we remove the key from overrideMap
+		// TODO: Also store a keymap to map from <setting.chamber.bedTemperature> to key
 		public void setValue(String key, String value) {
 			boolean wasChanged = isChanged();
 			if (settingMap.containsKey(key) && (value == null && settingMap.get(key) == null) || (settingMap.get(key) != null && settingMap.get(key).equals(value))) {
@@ -409,6 +423,10 @@ public abstract class SkeinforgeGenerator extends ToolpathGenerator {
 			} else {
 				overrideMap.put(key, value);
 			}
+			
+			// TODO: dynamically add keymappings
+			// gcodeKeyMap.put(???, key);
+			
 			if (isChanged() != wasChanged)
 				notifyProfileChangedChanged();
 		}
@@ -505,8 +523,11 @@ public abstract class SkeinforgeGenerator extends ToolpathGenerator {
 						// Base.logger.log(Level.FINEST, "Loaded value for key: " + key + " = " + (tokens.length>1?tokens[1]:null));
 						if (modified)
 							setValue(key, (tokens.length>1?tokens[1]:null)); // use the normal override logic
-						else
+						else {
 							settingMap.put(key, (tokens.length>1?tokens[1]:null));
+							// TODO: dynamically add keymappings
+							// gcodeKeyMap.put(???, key);
+						}
 						store.addKey(tokens[0]);
 					}
 				}
@@ -589,6 +610,8 @@ public abstract class SkeinforgeGenerator extends ToolpathGenerator {
 			// we want to clear our changes and then redisplay the original values
 			if (clearOverridesAfterSave) {
 				clearOverrides();
+				 // modified = false so changes don't load as overrides
+				scanProfileFolder(profileFile, (String)null, 0, /*modified*/false);
 			}
 		}
 	}
@@ -859,7 +882,7 @@ public abstract class SkeinforgeGenerator extends ToolpathGenerator {
 		cd.setName(name);
 		cd.setTitle(name);
 
-		if (Base.preferences.getBoolean("replicatorg.skeinforge.printOMatic.enabled", false)) {
+		if (Base.preferences.getBoolean("replicatorg.skeinforge.printOMatic.enabled", true)) {
 			
 			//Figure out if we're looking to do a toolhead swap
 			String extruderChoice = Base.preferences.get("replicatorg.skeinforge.printOMatic.toolheadOrientation", "does not exist");

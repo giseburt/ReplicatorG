@@ -10,10 +10,13 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import replicatorg.app.Base;
 import replicatorg.machine.model.ToolheadAlias;
 import replicatorg.model.GCodeSource;
+import replicatorg.plugin.toolpath.skeinforge.SkeinforgeGenerator.Profile;
 
 /**
  * Class to encapsulate a GCode file, as well as all of the operations
@@ -173,6 +176,29 @@ public class MutableGCodeSource implements GCodeSource {
 			newSource.add(line);
 		}
 		
+		source = newSource;
+	}
+	
+	// Fix lines like this:
+	// M104 S<setting.temperature.baseTemperature> T0 (set extruder temperature)
+	// to:
+	// M104 S220.0 T0 (set extruder temperature)
+	
+	public void replaceProfileKeys(Profile profile) {
+		Base.logger.finer("replacing tags in gcode" );
+		Pattern r = Pattern.compile("^([^<]+)<setting\\.([^>]+)>(.*)");
+		ArrayList<String> newSource = new ArrayList<String>(source.size());
+		String line;
+		for(Iterator<String> it = source.iterator(); it.hasNext(); )
+		{
+			line = it.next();
+			Matcher m = r.matcher(line);
+		    if (m.find()) {
+				Base.logger.finer("replacing tag " + m.group(2) + " with value: " + profile.getValueForPlastic(m.group(2)) );
+				line = m.group(1)+profile.getValueForPlastic(m.group(2))+m.group(3);
+		    }
+			newSource.add(line);
+		}
 		source = newSource;
 	}
 	

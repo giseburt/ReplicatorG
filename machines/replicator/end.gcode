@@ -1,5 +1,7 @@
 (******* End.gcode*******)
 M73 P100 (end  build progress )
+G92 E3 (set E to 3, for rapid reversal)
+G1 E0 F1800 (move E to 0, backward, at 30mm/s)
 G0 Z155
 M18
 M109 S0 T0

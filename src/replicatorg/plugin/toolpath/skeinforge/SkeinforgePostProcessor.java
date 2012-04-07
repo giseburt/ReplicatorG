@@ -161,10 +161,16 @@ public class SkeinforgePostProcessor {
 		
 		if(!dualstruding)
 		{
-			if(prependStart)
-				runPrepend(startCode);
-			if(appendEnd)
-				runAppend(endCode);
+			if(prependStart) {
+				MutableGCodeSource fixedStartCode = new MutableGCodeSource(startCode);
+				fixedStartCode.replaceProfileKeys(generator.getSelectedProfile());
+				runPrepend(fixedStartCode);
+			}
+			if(appendEnd) {
+				MutableGCodeSource fixedEndCode = new MutableGCodeSource(endCode);
+				fixedEndCode.replaceProfileKeys(generator.getSelectedProfile());
+				runAppend(fixedEndCode);
+			}
 
 			if( !multiHead )
 				toolheadTarget = ToolheadAlias.SINGLE; 
