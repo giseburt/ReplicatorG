@@ -29,9 +29,11 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
+import java.awt.image.RescaleOp;
 import java.lang.ref.WeakReference;
 import java.util.Enumeration;
 
@@ -45,6 +47,8 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.plaf.basic.BasicButtonUI;
 import javax.swing.JPanel;
+import javax.swing.JButton;
+import javax.swing.SwingConstants;
 
 import net.miginfocom.swing.MigLayout;
 import replicatorg.app.Base;
@@ -57,12 +61,17 @@ import replicatorg.model.BuildElement;
 public class EditorHeader extends JPanel implements ActionListener {
 	private ButtonGroup tabGroup = new ButtonGroup();
 
+	public interface BuildElementButton {
+		public BuildElement getBuildElement();
+		boolean isSelected();
+	}
+
 	public BuildElement getSelectedElement() {
 		// Enumeration isn't iterable yet?
 		Enumeration<AbstractButton> e = tabGroup.getElements();
 		while (e.hasMoreElements()) {
-			TabButton tb = (TabButton)e.nextElement();
-			if (tb.isSelected()) { return tb.getBuildElement(); }
+			BuildElementButton beb = (BuildElementButton)e.nextElement();
+			if (beb.isSelected()) { return beb.getBuildElement(); }
 		}
 		return null;
 	}
@@ -76,31 +85,14 @@ public class EditorHeader extends JPanel implements ActionListener {
 	void setChangeListener(ChangeListener listener) {
 		changeListener = listener;
 	}
-	
-	private class TabButtonUI extends BasicButtonUI {
-		public void paint(Graphics g, JComponent c) {
-			initTabImages();
-			TabButton b = (TabButton)c;
-			BufferedImage img = b.isSelected()?selectedTabBg:regularTabBg;
-			final int partWidth = img.getWidth()/3;
-			int height = img.getHeight();
-			final int x = 0;
-			final int y = 0;
-			final int w = c.getWidth();
-			// Draw left side of tab
-			g.drawImage(img, x, y, x+partWidth, y+height, 0, 0, partWidth, height, null);
-			final int rightTabStart = img.getWidth()-partWidth;
-			// Draw center of tab
-			g.drawImage(img, x+partWidth, y, x+w-partWidth, y+height, partWidth, 0, rightTabStart, height, null);
-			// Draw right side of tab
-			g.drawImage(img, x+w-partWidth, y, x+w, y+height, rightTabStart, 0, img.getWidth(), height, null);
-			b.setForeground(b.isSelected()?textSelectedColor:textUnselectedColor);
-			super.paint(g,c);
-		}
-	}
 
 	static BufferedImage selectedTabBg;
 	static BufferedImage regularTabBg;
+
+	static BufferedImage modelButtonIcon;
+	static BufferedImage modelButtonSelectedIcon;
+	static BufferedImage gcodeButtonIcon;
+	static BufferedImage gcodeButtonSelectedIcon;
 	
 	protected void initTabImages() {
 		if (selectedTabBg == null) {
@@ -109,41 +101,172 @@ public class EditorHeader extends JPanel implements ActionListener {
 		if (regularTabBg == null) {
 			regularTabBg = Base.getImage("images/tab-regular.png", this);
 		}
+		if (modelButtonIcon == null) {
+			modelButtonIcon = Base.getImage("images/model-view.png", this);
+		}
+		if (modelButtonSelectedIcon == null) {
+			modelButtonSelectedIcon = Base.getImage("images/model-view-selected.png", this);
+		}
+		if (gcodeButtonIcon == null) {
+			gcodeButtonIcon = Base.getImage("images/gcode-view.png", this);
+		}
+		if (gcodeButtonSelectedIcon == null) {
+			gcodeButtonSelectedIcon = Base.getImage("images/gcode-view-selected.png", this);
+		}
 	}
 
 
-	private class TabButton extends JToggleButton implements BuildElement.Listener {
+	private class TabButton extends JToggleButton implements BuildElement.Listener,BuildElementButton {
 		// Using a weak reference to work around massive leaks
 		// http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=4726458
 		// This bug is almost old enough to attend high school.
-		final WeakReference<BuildElement> element;
+		final WeakReference<Build> build;
+		private ButtonGroup elementGroup = new ButtonGroup();
 		
-		public BuildElement getBuildElement() { return element.get(); }
+		// Whoa, we're getting deep! Sadly, very similar to TabButton... -RobG
+		private class ElementButton extends JToggleButton implements BuildElement.Listener,BuildElementButton {
+			final WeakReference<BuildElement> element;
+			
+			boolean isModel;
+			
+			float[] scales = { 1f, 1f, 1f, 0.5f };
+			float[] offsets = new float[4];
+			RescaleOp rop = new RescaleOp(scales, offsets, null);;
+			
+			public BuildElement getBuildElement() {
+				return element.get();
+			}
+
+			public ElementButton(BuildElement element) {
+				this.element = new WeakReference<BuildElement>(element);
+				setBorder(new EmptyBorder(0,0,0,0));
+				elementGroup.add(this);
+				addActionListener(EditorHeader.this);
+				setOpaque(false);
+				element.addListener(this);
+				setMinimumSize(new Dimension(22, 22));
+				
+				isModel = !(element.getType() == BuildElement.Type.GCODE);
+			}
+			
+			public ElementButton(boolean isModel) {
+				this.isModel = isModel;
+				this.element = new WeakReference<BuildElement>(null);
+				setBorder(new EmptyBorder(0,0,0,0));
+				setOpaque(false);
+				setMinimumSize(new Dimension(22, 22));
+				setEnabled(false);
+			}
+
+			protected void paintComponent(Graphics g) {
+				// draw the approprate circle...
+				BufferedImage img = null;
+				if (element.get() == null) {
+					img = isModel?modelButtonIcon:gcodeButtonIcon;
+					Graphics2D g2d = (Graphics2D)g;
+					g2d.drawImage(img, rop,  0, 0);
+					super.paintComponent(g);
+					return;
+				}
+				else if (isModel) {
+					img = isSelected()?modelButtonSelectedIcon:modelButtonIcon;
+				} else {
+					img = isSelected()?gcodeButtonSelectedIcon:gcodeButtonIcon;
+				}
+				g.drawImage(img, 0, 0, null);
+				super.paintComponent(g);
+			}
+
+			public void buildElementUpdate(BuildElement element) {
+				if (element.isModified()) {
+					setText(build.get().getName()+"*");
+					setFont(getFont().deriveFont(Font.BOLD));
+				} else {
+					setText(build.get().getName());
+					setFont(getFont().deriveFont(Font.PLAIN));
+				}
+				repaint();
+			}
+			
+		}
 		
-		public TabButton(BuildElement element) {
-			buildElementUpdate(element); // set initial string
-			this.element = new WeakReference<BuildElement>(element);
-			setUI(new TabButtonUI());
-			setBorder(new EmptyBorder(6,7,7,10));
+		public BuildElement getBuildElement() {
+			Enumeration<AbstractButton> e = elementGroup.getElements();
+			while (e.hasMoreElements()) {
+				BuildElementButton beb = (BuildElementButton)e.nextElement();
+				if (beb.isSelected()) { return beb.getBuildElement(); }
+			}
+			return null;
+		}
+		
+		public TabButton(Build build) {
+			this.build = new WeakReference<Build>(build);
+			// setUI(new TabButtonUI());
+			setBorder(new EmptyBorder(5,7,8,7));
+			setLayout(new MigLayout("gap 0, ins 0", "push[right][right]"));
 			tabGroup.add(this);
 			addActionListener(EditorHeader.this);
-			element.addListener(this);
 			setOpaque(false);
+
+			setText(build.getName());
+			setHorizontalAlignment(SwingConstants.LEFT);
+
+			Dimension d = super.getMinimumSize();
+			setMinimumSize(new Dimension((int)d.getWidth() + 49, (int)d.getHeight()));
+		    
+			if (build.getModel() != null) {
+				ElementButton eb = new ElementButton(build.getModel());
+				this.add(eb, "growx");
+				if (build.getOpenedElement() == build.getModel()) { eb.doClick(); } 
+			} else {
+				// Add a "fake" button that drwas transparent
+				ElementButton eb = new ElementButton(/*isModel = */ true);
+				this.add(eb, "growx");
+			}
+			
+			if (build.getCode() != null) {
+				ElementButton eb = new ElementButton(build.getCode());
+				this.add(eb, "width 22!");
+				if (build.getOpenedElement() == build.getModel()) { eb.doClick(); } 
+			} else {
+				// Add a "fake" button that drwas transparent
+				ElementButton eb = new ElementButton(/*isModel = */ false);
+				this.add(eb, "growx");
+			}
+		}
+		
+		protected void paintComponent(Graphics g) {
+			initTabImages();
+			BufferedImage img = isSelected()?selectedTabBg:regularTabBg;
+			final int partWidth = img.getWidth()/3;
+			int height = img.getHeight();
+			final int x = 0;
+			final int y = 0;
+			final int w = getWidth();
+			// Draw left side of tab
+			g.drawImage(img, x, y, x+partWidth, y+height, 0, 0, partWidth, height, null);
+			final int rightTabStart = img.getWidth()-partWidth;
+			// Draw center of tab
+			g.drawImage(img, x+partWidth, y, x+w-partWidth, y+height, partWidth, 0, rightTabStart, height, null);
+			// Draw right side of tab
+			g.drawImage(img, x+w-partWidth, y, x+w, y+height, rightTabStart, 0, img.getWidth(), height, null);
+			setForeground(isSelected()?textSelectedColor:textUnselectedColor);
+			super.paintComponent(g);
 		}
 
 		public void buildElementUpdate(BuildElement element) {
 			if (element.isModified()) {
-				setText(element.getType().getDisplayString()+"*");
+				setText(build.get().getName()+"*");
 				setFont(getFont().deriveFont(Font.BOLD));
 			} else {
-				setText(element.getType().getDisplayString());
+				setText(build.get().getName());
 				setFont(getFont().deriveFont(Font.PLAIN));
 			}
 			repaint();
 		}
 	}
 	
-	JLabel titleLabel = new JLabel("Untitled");
+	//JLabel titleLabel = new JLabel("Untitled");
 	
 	MainWindow editor;
 
@@ -159,7 +282,7 @@ public class EditorHeader extends JPanel implements ActionListener {
 		setLayout(new MigLayout("ins 0 10 0 10,gap 10 10 0 0"));
 		this.editor = mainWindow;
 
-		add(titleLabel);
+		// add(titleLabel);
 		// backgroundColor = new Color(0xFF, 0xFF, 0x00); //new Color(0x92, 0xA0, 0x6B);
 		// backgroundImg = Base.getImage("images/background-disconnected.png", this);
 		// vOffset = -40;
@@ -185,24 +308,19 @@ public class EditorHeader extends JPanel implements ActionListener {
 		validate();
 	}
 
-	private void addTabForElement(Build build, BuildElement element) {
-		TabButton tb = new TabButton(element);
+	private void addTabForBuild(Build build) {
+		TabButton tb = new TabButton(build);
 		add(tb);
-		if (build.getOpenedElement() == element) { tb.doClick(); } 
+		tb.doClick();
+		// if (build.getOpenedElement() == element) { tb.doClick(); } 
 	}
 	
 	void setBuild(Build build) {
 		int lines = 0;
 		removeTabs();
-		if (build.getModel() != null) {
-			addTabForElement(build,build.getModel());
-		}
-		if (build.getCode() != null) {
-			addTabForElement(build,build.getCode());
-            		lines = build.getLines();
-		}
-		titleLabel.setText(build.getName());
-		titleLabel.setToolTipText("lines: "+lines);
+		addTabForBuild(build);
+		// titleLabel.setText(build.getName());
+		// titleLabel.setToolTipText("lines: "+lines);
 		validate();
 		repaint();
 	}
