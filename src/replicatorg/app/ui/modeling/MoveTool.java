@@ -19,7 +19,7 @@ import replicatorg.app.Base;
 import replicatorg.app.ui.modeling.PreviewPanel.DragMode;
 
 public class MoveTool extends Tool {
-	public MoveTool(ToolPanel parent) {
+	public MoveTool(ActionPanel parent) {
 		super(parent);
 	}
 	

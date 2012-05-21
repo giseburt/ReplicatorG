@@ -9,9 +9,9 @@ package replicatorg.machine.model;
  */
 public enum ToolheadAlias
 {
-	RIGHT(0, "Right","A", "T0", "P1","G54"),
-	LEFT(1, "Left", "B","T1", "P2", "G55"),
-	SINGLE(0, "Center","A", "T0", "P1","G53");
+	RIGHT( 0, "Right", "A", "T0", "P1", "G54"),
+	LEFT(  1, "Left",  "B", "T1", "P2", "G55"),
+	SINGLE(0, "Center","A", "T0", "P1", "G53");
 	
 	public final int number;	/// Toolhead ID number
 	public final String tcodeName;	///Tcode for a toolhead (gcode commands)

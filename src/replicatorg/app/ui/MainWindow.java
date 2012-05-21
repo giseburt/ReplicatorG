@@ -75,6 +75,9 @@ import java.util.regex.Pattern;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
+import javax.swing.BorderFactory;
+import javax.swing.border.Border;
+import javax.swing.border.TitledBorder;
 import javax.swing.ButtonGroup;
 import javax.swing.JDialog;
 import javax.swing.JFileChooser;
@@ -93,6 +96,7 @@ import javax.swing.JSeparator;
 import javax.swing.JSplitPane;
 import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.UndoableEditEvent;
@@ -292,6 +296,11 @@ ToolpathGenerator.GeneratorListener
 	public MainWindow() {
 		super(WINDOW_TITLE);
 		setLocationByPlatform(true);
+
+		// Make Border groups look like OS X on OS X
+		// Border border = UIManager.getBorder("TitledBorder.aquaVariant");
+		// if (border != null) UIManager.put("TitledBorder.border", border);
+	 
 		MRJApplicationUtils.registerAboutHandler(this);
 		MRJApplicationUtils.registerPrefsHandler(this);
 		MRJApplicationUtils.registerQuitHandler(this);

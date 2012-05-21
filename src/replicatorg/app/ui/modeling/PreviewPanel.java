@@ -135,7 +135,7 @@ public class PreviewPanel extends JPanel {
 	};
 
 	//FIX THIS!
-	ToolPanel toolPanel;
+	ActionPanel actionPanel;
 	BGPanel topToolPanel;
 	
 	Tool currentTool = null; // The tool currently in use.
@@ -200,15 +200,17 @@ public class PreviewPanel extends JPanel {
 		// Create Canvas3D and SimpleUniverse; add canvas to drawing panel
 		canvas = createUniverse();
 		add(canvas, "growx,growy");
-		toolPanel = new ToolPanel(this);
-		if (Base.isMacOS()) {
-			add(toolPanel,"dock east,width max(300,25%)");
-		} else {
-			add(toolPanel,"dock east,width max(200,20%)");
-		}
-		
+
 		topToolPanel = new BGPanel();
 		topToolPanel.setBackground(Base.getImage("images/toolbar-background.png", this), 0);
+
+		actionPanel = new ActionPanel(this, topToolPanel);
+		if (Base.isMacOS()) {
+			add(actionPanel,"dock east,width max(300,25%)");
+		} else {
+			add(actionPanel,"dock east,width max(200,20%)");
+		}
+		
 		add(topToolPanel,"dock north,growx,h 30");
 		
 		// Create the content branch and add it to the universe
@@ -225,7 +227,7 @@ public class PreviewPanel extends JPanel {
 			}
 		});
 		
-		addKeyListener(toolPanel);
+		addKeyListener(actionPanel);
 
 	}		
 

@@ -10,7 +10,7 @@ import javax.swing.JPanel;
 import net.miginfocom.swing.MigLayout;
 
 public class MirrorTool extends Tool {
-	public MirrorTool(ToolPanel parent) {
+	public MirrorTool(ActionPanel parent) {
 		super(parent);
 	}
 	

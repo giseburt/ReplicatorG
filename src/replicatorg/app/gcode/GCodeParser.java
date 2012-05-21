@@ -871,7 +871,10 @@ public class GCodeParser {
 				current.setA(aVal);
 			// Note: The E axis is treated internally as the A axis
 			if (gcode.hasCode('E'))
-				current.setA(eVal);
+				if (tool == 0)
+					current.setA(eVal);
+				else if (tool == 1)
+					current.setB(eVal);
 			if (gcode.hasCode('B'))
 				current.setB(bVal);
 			

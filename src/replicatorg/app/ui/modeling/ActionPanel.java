@@ -13,7 +13,9 @@ import javax.swing.SwingConstants;
 
 import net.miginfocom.swing.MigLayout;
 
-public class ToolPanel extends JPanel implements KeyListener {
+import replicatorg.app.ui.BGPanel;
+
+public class ActionPanel extends JPanel implements KeyListener {
 
 	public JButton createToolButton(String text, String iconPath) {
 		//ImageIcon icon = new ImageIcon(Base.getImage(iconPath, this));
@@ -36,6 +38,7 @@ public class ToolPanel extends JPanel implements KeyListener {
 	}
 
 	final PreviewPanel preview;
+	final BGPanel toolbarPanel;
 	final JPanel subPanel = new JPanel(new MigLayout("fillx,filly,ins 0,gap 0"));
 	
 	Tool[] tools = { 
@@ -75,12 +78,14 @@ public class ToolPanel extends JPanel implements KeyListener {
 	
 	final JLabel infoLabel = new JLabel();
 	
-	ToolPanel(final PreviewPanel preview) {
+	ActionPanel(final PreviewPanel preview, final BGPanel toolbarPanel) {
 		this.preview = preview;
+		this.toolbarPanel = toolbarPanel;
 		setLayout(new MigLayout("gap 0,filly,wrap 1"));
 
+		setLayout(new MigLayout("gap 2,fill"));
+
 		JPanel toolButtons = new JPanel(new MigLayout("gap 0 0,ins 0,novisualpadding,wrap 1","0[100%]0"));
-		
 		add(toolButtons,"south");
 	
 		int column = 0;

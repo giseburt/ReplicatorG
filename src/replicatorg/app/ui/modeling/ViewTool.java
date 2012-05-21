@@ -10,7 +10,7 @@ import javax.swing.JPanel;
 import net.miginfocom.swing.MigLayout;
 
 public class ViewTool extends Tool {
-	public ViewTool(ToolPanel parent) {
+	public ViewTool(ActionPanel parent) {
 		super(parent);
 	}
 

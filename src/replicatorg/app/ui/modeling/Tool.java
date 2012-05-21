@@ -72,8 +72,8 @@ public abstract class Tool implements MouseMotionListener, MouseListener, MouseW
 	abstract String getInstructions();
 	abstract JPanel getControls();
 	
-	final protected ToolPanel parent;
-	public Tool(ToolPanel parent) {
+	final protected ActionPanel parent;
+	public Tool(ActionPanel parent) {
 		this.parent = parent;
 	}
 

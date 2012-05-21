@@ -34,6 +34,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.awt.image.RescaleOp;
+import java.awt.geom.Arc2D;
+import java.awt.RenderingHints;
 import java.lang.ref.WeakReference;
 import java.util.Enumeration;
 
@@ -91,8 +93,10 @@ public class EditorHeader extends JPanel implements ActionListener {
 
 	static BufferedImage modelButtonIcon;
 	static BufferedImage modelButtonSelectedIcon;
+	static BufferedImage modelButtonOverIcon;
 	static BufferedImage gcodeButtonIcon;
 	static BufferedImage gcodeButtonSelectedIcon;
+	static BufferedImage gcodeButtonOverIcon;
 	
 	protected void initTabImages() {
 		if (selectedTabBg == null) {
@@ -107,11 +111,17 @@ public class EditorHeader extends JPanel implements ActionListener {
 		if (modelButtonSelectedIcon == null) {
 			modelButtonSelectedIcon = Base.getImage("images/model-view-selected.png", this);
 		}
+		if (modelButtonOverIcon == null) {
+			modelButtonOverIcon = Base.getImage("images/model-view-over.png", this);
+		}
 		if (gcodeButtonIcon == null) {
 			gcodeButtonIcon = Base.getImage("images/gcode-view.png", this);
 		}
 		if (gcodeButtonSelectedIcon == null) {
 			gcodeButtonSelectedIcon = Base.getImage("images/gcode-view-selected.png", this);
+		}
+		if (gcodeButtonOverIcon == null) {
+			gcodeButtonOverIcon = Base.getImage("images/gcode-view-over.png", this);
 		}
 	}
 
@@ -145,7 +155,7 @@ public class EditorHeader extends JPanel implements ActionListener {
 				setOpaque(false);
 				element.addListener(this);
 				setMinimumSize(new Dimension(22, 22));
-				
+				setRolloverEnabled(true);
 				isModel = !(element.getType() == BuildElement.Type.GCODE);
 			}
 			
@@ -159,19 +169,39 @@ public class EditorHeader extends JPanel implements ActionListener {
 			}
 
 			protected void paintComponent(Graphics g) {
+				Graphics2D g2d = (Graphics2D)g;
 				// draw the approprate circle...
 				BufferedImage img = null;
 				if (element.get() == null) {
-					img = isModel?modelButtonIcon:gcodeButtonIcon;
-					Graphics2D g2d = (Graphics2D)g;
+				    g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+					g2d.drawImage(img, 0, 0, null);
+
+				    Arc2D.Float arc = new Arc2D.Float(Arc2D.PIE);
+				    arc.setFrame(1, 1, 20, 20);
+				    arc.setAngleStart(90);
+				    arc.setAngleExtent(-270);
+				    g2d.setColor(new Color(1.0f,0.2f,0.2f,0.8f));
+				    g2d.fill(arc);
+
+					img = isModel?modelButtonIcon:gcodeButtonSelectedIcon;
 					g2d.drawImage(img, rop,  0, 0);
+
 					super.paintComponent(g);
 					return;
 				}
 				else if (isModel) {
-					img = isSelected()?modelButtonSelectedIcon:modelButtonIcon;
+					if (getModel().isRollover() && !isSelected()) {
+						img = modelButtonOverIcon;
+					} else {
+						img = isSelected()?modelButtonSelectedIcon:modelButtonIcon;
+					}
 				} else {
-					img = isSelected()?gcodeButtonSelectedIcon:gcodeButtonIcon;
+					if (getModel().isRollover() && !isSelected()) {
+						img = gcodeButtonOverIcon;
+					} else {
+						img = isSelected()?gcodeButtonSelectedIcon:gcodeButtonIcon;
+					}
 				}
 				g.drawImage(img, 0, 0, null);
 				super.paintComponent(g);

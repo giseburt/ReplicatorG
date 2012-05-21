@@ -19,7 +19,7 @@ import replicatorg.app.ui.modeling.PreviewPanel.DragMode;
 
 public class ScalingTool extends Tool {
 
-	public ScalingTool(ToolPanel parent) {
+	public ScalingTool(ActionPanel parent) {
 		super(parent);
 	}
 

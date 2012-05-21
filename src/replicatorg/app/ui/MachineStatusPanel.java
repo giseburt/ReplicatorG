@@ -56,16 +56,19 @@ public class MachineStatusPanel extends BGPanel implements MachineListener {
 		Font smallFont = statusFont.deriveFont(10f);
 		smallLabel.setFont(smallFont);
 		tempLabel.setFont(smallFont);
-		setLayout(new MigLayout("nocache,fill,gap 0 0,ins 0", "[grow, right]", "[40%][30%][30%]"));
+		setLayout(new MigLayout("nocache,fill,gap 0 0,ins 0", "[grow]", "[100%]"));
 		setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0));
 
 		mainLabel.setText("Not Connected");
-		mainLabel.setAlignmentX(RIGHT_ALIGNMENT);
-		add(mainLabel, "right,growx, wrap");
-		smallLabel.setAlignmentX(RIGHT_ALIGNMENT);
-		add(smallLabel, "right,growx, wrap");
-		tempLabel.setAlignmentX(RIGHT_ALIGNMENT);
-		add(tempLabel, "right,growx");
+		mainLabel.setHorizontalAlignment(JLabel.RIGHT);
+		mainLabel.setForeground(Color.white);
+		add(mainLabel, "growx,wrap");
+		smallLabel.setHorizontalAlignment(JLabel.RIGHT);
+		smallLabel.setForeground(Color.white);
+		add(smallLabel, "growx,wrap");
+		tempLabel.setHorizontalAlignment(JLabel.RIGHT);
+		tempLabel.setForeground(Color.white);
+		add(tempLabel, "growx");
 
 		FontMetrics smallMetrics = this.getFontMetrics(smallFont);
 		FontMetrics bigMetrics = this.getFontMetrics(statusFont);

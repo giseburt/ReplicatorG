@@ -16,7 +16,7 @@ import replicatorg.app.Base;
 import replicatorg.app.ui.modeling.PreviewPanel.DragMode;
 
 public class RotationTool extends Tool {
-	public RotationTool(ToolPanel parent) {
+	public RotationTool(ActionPanel parent) {
 		super(parent);
 	}
 	
