@@ -161,14 +161,16 @@ class MightyBoardEEPROM implements EEPROMClass
 
 	// 50 bytes of free space for expansion
 
-	final public static int EEPROM_STEPS_PER_MM_OFFSET          = 0x0194;
-	final public static int EEPROM_ACCELERATION_RATE_OFFSET     = 0x01A8;
-	final public static int EEPROM_AXIS_ACC_RATE_OFFSET         = 0x01AC;
-	final public static int EEPROM_AXIS_JUNCTION_JERK_OFFSET    = 0x01C0;
-	final public static int EEPROM_MINIMUM_PLANNER_SPEED_OFFSET = 0x01D0;
+	final public static int ACCELERATION_SETTINGS               = 0x016E;
+
+	final public static int EEPROM_ACCELERATION_ACTIVE          = ACCELERATION_SETTINGS + 0x000;
+	// final public static int EEPROM_STEPS_PER_MM_OFFSET          = ACCELERATION_SETTINGS + ???;
+	final public static int EEPROM_ACCELERATION_RATE_OFFSET     = ACCELERATION_SETTINGS + 0x002;
+	final public static int EEPROM_AXIS_ACC_RATE_OFFSET         = ACCELERATION_SETTINGS + 0x004;
+	final public static int EEPROM_AXIS_JUNCTION_JERK_OFFSET    = ACCELERATION_SETTINGS + 0x00E;
 
 	/// start of free space
-	final public static int FREE_EEPROM_STARTS = 0x01D1;
+	final public static int FREE_EEPROM_STARTS = 0x0184;
 
 }
 
@@ -258,7 +260,7 @@ public class MightyBoard extends Makerbot4GAlternateDriver
 	private int toolCountOnboard = -1; /// no count aka FFFF
 	
 	Version toolVersion = new Version(0,0);
-        Version accelerationVersion = new Version(0,0);
+	Version accelerationVersion = new Version(0,0);
 
 	/** 
 	 * Standard Constructor
@@ -275,8 +277,7 @@ public class MightyBoard extends Makerbot4GAlternateDriver
 		// firmware version we want this driver to support.
 		minimumVersion = new Version(5,2);
 		preferredVersion = new Version(5,2);
-                minimumAccelerationVersion = new Version(9,3);
-
+		minimumAccelerationVersion = new Version(5,3);
 	}
 	
 	/**
@@ -326,15 +327,15 @@ public class MightyBoard extends Makerbot4GAlternateDriver
 			Base.logger.severe("Please double-check your selected machine.");
 		}
 		
-		boolean stepsPerMMMatched = checkEepromStepsPerMM();
-		if (!stepsPerMMMatched) {
-			int n = JOptionPane.showConfirmDialog(null, "The motherboard's stored steps/mm settings\ndon't match the selected machine profile.\nWould you like to update the motherboard\nsettings to match the profile and close the connection?\n", "Steps/mm mismatch", JOptionPane.YES_NO_OPTION);
-			if (n == JOptionPane.YES_OPTION) {
-				setEepromStepsPerMM();
-				reset(/*reconnect*/ false);
-				return false;
-			}
-		}
+		// boolean stepsPerMMMatched = checkEepromStepsPerMM();
+		// if (!stepsPerMMMatched) {
+		// 	int n = JOptionPane.showConfirmDialog(null, "The motherboard's stored steps/mm settings\ndon't match the selected machine profile.\nWould you like to update the motherboard\nsettings to match the profile and close the connection?\n", "Steps/mm mismatch", JOptionPane.YES_NO_OPTION);
+		// 	if (n == JOptionPane.YES_OPTION) {
+		// 		setEepromStepsPerMM();
+		// 		reset(/*reconnect*/ false);
+		// 		return false;
+		// 	}
+		// }
 		
 		// I have no idea why we still do this, we may want to test and refactor away
 		getSpindleSpeedPWM();
@@ -1026,12 +1027,35 @@ public class MightyBoard extends Makerbot4GAlternateDriver
 	}
 
 
-	/**
-	 * Returns true of the current firmware supports acceleration.
-	 * FIXME FIXME FIXME FIXME FIXME FIXME FIXME FIXME
-	 */
 	@Override
-	public boolean hasAccelerationSupport() {
+		// get stored acceleration status: either ON of OFF
+	// acceleration is applied to all moves, except homing when ON
+	public boolean getAccelerationStatus(){
+
+		Base.logger.finest("MightyBoard getAccelerationStatus");
+
+		checkEEPROM();
+
+		byte[] val = readFromEEPROM(MightyBoardEEPROM.ACCELERATION_SETTINGS,1);
+
+		return (val[0] > 0 ? true : false);
+	}
+
+	@Override
+		// set stored acceleration status: either ON of OFF
+	// acceleration is applied to all moves, except homing when ON
+	public void setAccelerationStatus(byte status){
+		Base.logger.info("MightyBoard setAccelerationStatus");
+
+		byte b[] = new byte[1];
+		b[0] = status;
+		writeToEEPROM(MightyBoardEEPROM.ACCELERATION_SETTINGS, b);
+	}
+
+	@Override
+	public boolean hasAcceleration() { 
+		if (version.compareTo(getMinimumAccelerationVersion()) < 0)
+			return false;
 		return true;
 	}
 
@@ -1042,24 +1066,10 @@ public class MightyBoard extends Makerbot4GAlternateDriver
 	@Override
 	public Point5d getAxisAccelerationRates() {
 		checkEEPROM();
-		byte[] defaultValue = {
-			(byte)0xD0, (byte)0x07, (byte)0x00, (byte)0x00, /* X 2000 */
-			(byte)0xD0, (byte)0x07, (byte)0x00, (byte)0x00, /* Y 2000 */
-			(byte)0x0A, (byte)0x00, (byte)0x00, (byte)0x00, /* Z 10   */
-			(byte)0x88, (byte)0x13, (byte)0x00, (byte)0x00, /* A 5000 */
-			(byte)0x88, (byte)0x13, (byte)0x00, (byte)0x00, /* B 5000 */
-		};
-		byte[] r = readFromEEPROMwithDefault(
-				MightyBoardEEPROM.EEPROM_AXIS_ACC_RATE_OFFSET, 20, defaultValue
-			);
-				
 		// Point5d stepsPerMM = getMachine().getStepsPerMM();
 		Point5d acceleration = new Point5d();
 		for (int axis = 0; axis < 5; axis++) {
-			int val = 0;
-			for (int i = 0; i < 4; i++) {
-				val = val | (((int) r[i+(axis*4)] & 0xff) << 8 * i);
-			}
+			int val = read16FromEEPROM(MightyBoardEEPROM.EEPROM_AXIS_ACC_RATE_OFFSET + (axis * 2));
 			acceleration.set(axis, (double)val);
 		}
 		return acceleration;
@@ -1074,7 +1084,7 @@ public class MightyBoard extends Makerbot4GAlternateDriver
 		// Point5d stepsPerMM = getMachine().getStepsPerMM();
 		for (int axis = 0; axis < 5; axis++) {
 			int val = (int)Math.ceil(acceleration.get(axis));
-			writeToEEPROM(MightyBoardEEPROM.EEPROM_AXIS_ACC_RATE_OFFSET + (axis * 4), intToLE(val));
+			write16ToEEPROM(MightyBoardEEPROM.EEPROM_AXIS_ACC_RATE_OFFSET + (axis * 2), val);
 		}
 	}
 
@@ -1083,16 +1093,10 @@ public class MightyBoard extends Makerbot4GAlternateDriver
 	 */
 	@Override
 	public int getMasterAccelerationRate() {
+		Base.logger.finest("MightyBoard getMasterAccelerationRate" );
 		checkEEPROM();
-		byte[] defaultValue = {(byte)0xd0, (byte)0x07, (byte)0x00, (byte)0x00, /* 2000 */};
-		byte[] r = readFromEEPROMwithDefault(
-				MightyBoardEEPROM.EEPROM_ACCELERATION_RATE_OFFSET, 4, defaultValue);
-
-		int val = 0;
-		for (int i = 0; i < 4; i++) {
-			val = val | (((int) r[i] & 0xff) << 8 * i);
-		}
 		
+		int val = read16FromEEPROM(MightyBoardEEPROM.EEPROM_ACCELERATION_RATE_OFFSET);
 		return val;
 	}
 
@@ -1102,43 +1106,50 @@ public class MightyBoard extends Makerbot4GAlternateDriver
 	 */
 	@Override
 	public void setMasterAccelerationRate(int acceleration) {
-		checkEEPROM();
-		writeToEEPROM(MightyBoardEEPROM.EEPROM_ACCELERATION_RATE_OFFSET, intToLE(acceleration));
+		Base.logger.finest("MightyBoard setMasterAccelerationRate" );
+
+		// limit rate to 16 bit integer max
+		if(acceleration  > 32767)
+			acceleration = 32767;
+		if(acceleration < -32768)
+			acceleration = -32768;
+
+		write16ToEEPROM(MightyBoardEEPROM.EEPROM_ACCELERATION_RATE_OFFSET, acceleration);
 	}
 
-	/**
-	 * Checks that the StepsPerMM EEPROM settings on the motherboard matches those in the machine profile.
-	 * StepsPerMM are stored in fixed-point Q16 (top 16 bits are integert, bottom 16 are fractional).
-	 */
-	@Override
-	public boolean checkEepromStepsPerMM() {
-		checkEEPROM();
-		byte[] r = readFromEEPROM(
-				MightyBoardEEPROM.EEPROM_STEPS_PER_MM_OFFSET, 20);
-
-		Point5d stepsPerMM = getMachine().getStepsPerMM();
-		for (int axis = 0; axis < 5; axis++) {
-			byte[] check = floatTo32LE((float)stepsPerMM.get(axis));
-			for (int i = 0; i < 4; i++) {
-				if (r[i+(axis * 4)] != check[i])
-					return false;
-			}
-		}
-		return true;
-	}
-
-	/**
-	 * Writes the StepsPerMM from the machine profile to the EEPROM settings on the motherboard.
-	 * StepsPerMM are stored in fixed-point Q16 (top 16 bits are integert, bottom 16 are fractional).
-	 */
-	@Override
-	public void setEepromStepsPerMM() {
-		Point5d stepsPerMM = getMachine().getStepsPerMM();
-		for (int axis = 0; axis < 5; axis++) {
-			float val = (float)stepsPerMM.get(axis);
-			writeToEEPROM(MightyBoardEEPROM.EEPROM_STEPS_PER_MM_OFFSET + (axis * 4), floatTo32LE(val));
-		}
-	}
+	// /**
+	//  * Checks that the StepsPerMM EEPROM settings on the motherboard matches those in the machine profile.
+	//  * StepsPerMM are stored in fixed-point Q16 (top 16 bits are integert, bottom 16 are fractional).
+	//  */
+	// @Override
+	// public boolean checkEepromStepsPerMM() {
+	// 	checkEEPROM();
+	// 	byte[] r = readFromEEPROM(
+	// 			MightyBoardEEPROM.EEPROM_STEPS_PER_MM_OFFSET, 20);
+	// 
+	// 	Point5d stepsPerMM = getMachine().getStepsPerMM();
+	// 	for (int axis = 0; axis < 5; axis++) {
+	// 		byte[] check = floatTo32LE((float)stepsPerMM.get(axis));
+	// 		for (int i = 0; i < 4; i++) {
+	// 			if (r[i+(axis * 4)] != check[i])
+	// 				return false;
+	// 		}
+	// 	}
+	// 	return true;
+	// }
+	// 
+	// /**
+	//  * Writes the StepsPerMM from the machine profile to the EEPROM settings on the motherboard.
+	//  * StepsPerMM are stored in fixed-point Q16 (top 16 bits are integert, bottom 16 are fractional).
+	//  */
+	// @Override
+	// public void setEepromStepsPerMM() {
+	// 	Point5d stepsPerMM = getMachine().getStepsPerMM();
+	// 	for (int axis = 0; axis < 5; axis++) {
+	// 		float val = (float)stepsPerMM.get(axis);
+	// 		writeToEEPROM(MightyBoardEEPROM.EEPROM_STEPS_PER_MM_OFFSET + (axis * 4), floatTo32LE(val));
+	// 	}
+	// }
 
 	/**
 	 * Reads the junction jerk values from the EEPROM settings on the motherboard and returns a Point5d.
@@ -1148,25 +1159,15 @@ public class MightyBoard extends Makerbot4GAlternateDriver
 	@Override
 	public Point5d getAxisJunctionJerks() {
 		checkEEPROM();
-		byte[] defaultValue = {
-			0x00, 0x00, 0x08, 0x00, /* X/Y = 8 */
-			0x00, 0x00, 0x08, 0x00, /* Z = 8 */
-			0x00, 0x00, 0x0A, 0x00, /* A = 10 */
-			0x00, 0x00, 0x0A, 0x00, /* A = 10 */
-		};
-		byte[] r = readFromEEPROMwithDefault(
-				MightyBoardEEPROM.EEPROM_AXIS_JUNCTION_JERK_OFFSET, 16, defaultValue
-			);
-
-		// Point5d stepsPerMM = getMachine().getStepsPerMM();
+		byte[] r = readFromEEPROM(MightyBoardEEPROM.EEPROM_AXIS_JUNCTION_JERK_OFFSET, 8);
 		Point5d jerks = new Point5d();
 		int offset = 0;
 		for (int axis = 0; axis < 5; axis++) {
 			if (axis == 1)
 				continue;
-			double val = byte32LEToFloat(r, offset);
+			double val = byte16LEToFloat(r, offset);
 			jerks.set(axis, val);
-			offset += 4;
+			offset += 2;
 		}
 		return jerks;
 	}
@@ -1184,32 +1185,9 @@ public class MightyBoard extends Makerbot4GAlternateDriver
 			if (axis == 1)
 				continue;
 			double val = jerks.get(axis);
-			writeToEEPROM(MightyBoardEEPROM.EEPROM_AXIS_JUNCTION_JERK_OFFSET + (offset * 4), floatTo32LE((float)val));
-			offset++;
+			writeToEEPROM(MightyBoardEEPROM.EEPROM_AXIS_JUNCTION_JERK_OFFSET + offset, floatTo16LE((float)val));
+			offset += 2;
 		}
-	}
-
-	/**
-	 * Reads an double that contains the minimum planner speed.
-	 */
-	@Override
-	public double getMinimumPlannerSpeed() {
-		checkEEPROM();
-		byte[] defaultValue = floatTo32LE(4.0f);
-		byte[] r = readFromEEPROMwithDefault(
-				MightyBoardEEPROM.EEPROM_MINIMUM_PLANNER_SPEED_OFFSET, 4, defaultValue);
-
-		double val = byte32LEToFloat(r);
-		return val;
-	}
-
-	/**
-	 * Writes an double that contains the minimum planner speed to the motherboard EEPROM.
-	 */
-	@Override
-	public void setMinimumPlannerSpeed(double minPlannerSpeed) {
-		checkEEPROM();
-		writeToEEPROM(MightyBoardEEPROM.EEPROM_MINIMUM_PLANNER_SPEED_OFFSET, floatTo32LE((float)minPlannerSpeed));
 	}
 
 	@Override
@@ -1512,7 +1490,7 @@ public class MightyBoard extends Makerbot4GAlternateDriver
 				s = s >>> 8;
 		}
 		writeToEEPROM(offset,buf);
-        }
+	}
         
         /// read a 16 bit int from EEPROM at location 'offset'
 	private int read16FromEEPROM(int offset)
@@ -1536,7 +1514,7 @@ public class MightyBoard extends Makerbot4GAlternateDriver
 				s = s >>> 8;
 		}
 		writeToEEPROM(offset,buf);
-        }
+	}
 
 
 	

@@ -42,17 +42,7 @@ public interface OnboardParameters {
 	
 	double getAxisHomeOffset(int axis);
 	void setAxisHomeOffset(int axis, double d);
-        
-        /// returns true if the target machine stores toolhead offsets
-	boolean hasAcceleration();
-        /// Store acceleration settings to eeprom 
-        void setAccelerationStatus(byte status);
-        void setAccelerationRate(int rate);
-        /// Read acceleration settings from eeprom
-        boolean getAccelerationStatus();
-        int getAccelerationRate();
 	
-        
 	
 	/// returns true if the target machine stores toolhead offsets
 	boolean hasToolheadsOffset();
@@ -182,13 +172,19 @@ public interface OnboardParameters {
 	int getStoredStepperVoltage(int stepperId);
 
 
-	boolean hasAccelerationSupport();
+	/// returns true if the target machine stores toolhead offsets
+	boolean hasAcceleration();
+	/// Store acceleration settings to eeprom 
+	void setAccelerationStatus(byte status);
+	/// Read acceleration settings from eeprom
+	boolean getAccelerationStatus();
+
 	Point5d getAxisAccelerationRates();
 	void setAxisAccelerationRates(Point5d acceleration);
 	int getMasterAccelerationRate();
 	void setMasterAccelerationRate(int acceleration);
-	boolean checkEepromStepsPerMM();
-	void setEepromStepsPerMM();
+	// boolean checkEepromStepsPerMM();
+	// void setEepromStepsPerMM();
 	Point5d getAxisJunctionJerks();
 	void setAxisJunctionJerks(Point5d jerks);
 	double getMinimumPlannerSpeed();

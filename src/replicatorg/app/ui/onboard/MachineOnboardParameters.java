@@ -83,14 +83,14 @@ public class MachineOnboardParameters extends JPanel {
 	private JFormattedTextField vref2 = new JFormattedTextField(threePlaces);
 	private JFormattedTextField vref3 = new JFormattedTextField(threePlaces);
 	private JFormattedTextField vref4 = new JFormattedTextField(threePlaces);
-        
-        private JFormattedTextField xToolheadOffsetField = new JFormattedTextField(threePlaces);
-        private JFormattedTextField yToolheadOffsetField = new JFormattedTextField(threePlaces);
-        private JFormattedTextField zToolheadOffsetField = new JFormattedTextField(threePlaces);
+
+	private JFormattedTextField xToolheadOffsetField = new JFormattedTextField(threePlaces);
+	private JFormattedTextField yToolheadOffsetField = new JFormattedTextField(threePlaces);
+	private JFormattedTextField zToolheadOffsetField = new JFormattedTextField(threePlaces);
+
+	private JCheckBox accelerationBox = new JCheckBox();   
 	
 	private JFormattedTextField masterAcceleration = new JFormattedTextField(threePlaces);
-	
-	private JFormattedTextField minimumPlannerSpeed = new JFormattedTextField(threePlaces);
 
 	private JFormattedTextField xAxisAcceleration = new JFormattedTextField(threePlaces);
 	private JFormattedTextField yAxisAcceleration = new JFormattedTextField(threePlaces);
@@ -175,17 +175,17 @@ public class MachineOnboardParameters extends JPanel {
 			target.setStoredStepperVoltage(3, ((Number)vref3.getValue()).intValue());
 			target.setStoredStepperVoltage(4, ((Number)vref4.getValue()).intValue());
 		}
-                
-        target.eepromStoreToolDelta(0, ((Number)xToolheadOffsetField.getValue()).doubleValue());
-        target.eepromStoreToolDelta(1, ((Number)yToolheadOffsetField.getValue()).doubleValue());
-        target.eepromStoreToolDelta(2, ((Number)zToolheadOffsetField.getValue()).doubleValue());
 
-        requestResetFromUser();
+		target.eepromStoreToolDelta(0, ((Number)xToolheadOffsetField.getValue()).doubleValue());
+		target.eepromStoreToolDelta(1, ((Number)yToolheadOffsetField.getValue()).doubleValue());
+		target.eepromStoreToolDelta(2, ((Number)zToolheadOffsetField.getValue()).doubleValue());
 		
-		if(target.hasAccelerationSupport())
+		if(target.hasAcceleration())
 		{
+	        byte status = accelerationBox.isSelected() ? (byte)1: (byte)0;
+	        target.setAccelerationStatus(status);
+
 			target.setMasterAccelerationRate(((Number)masterAcceleration.getValue()).intValue());
-			target.setMinimumPlannerSpeed(((Number)minimumPlannerSpeed.getValue()).doubleValue());
 			
 			Point5d accelerationRates = new Point5d();
 			accelerationRates.set(0, ((Number)xAxisAcceleration.getValue()).doubleValue());
@@ -284,11 +284,10 @@ public class MachineOnboardParameters extends JPanel {
 		}    
 		
 		
-		if(target.hasAccelerationSupport())
+		if(target.hasAcceleration())
 		{
+			accelerationBox.setSelected(this.target.getAccelerationStatus());
 			masterAcceleration.setValue(target.getMasterAccelerationRate());
-
-			minimumPlannerSpeed.setValue(target.getMinimumPlannerSpeed());
 			
 			Point5d accelerationRates = target.getAxisAccelerationRates();
 			xAxisAcceleration.setValue(accelerationRates.x());
@@ -437,13 +436,12 @@ public class MachineOnboardParameters extends JPanel {
 		    homeVrefsTab.add(zToolheadOffsetField, "spanx, wrap");
 		}
 
-		if(target.hasAccelerationSupport())
+		if(target.hasAcceleration())
 		{
 			JPanel accelerationTab = new JPanel(new MigLayout("fill", "[r][l][r][l]"));
 			subTabs.addTab("Acceleration", accelerationTab);
 
 			masterAcceleration.setColumns(4);
-			minimumPlannerSpeed.setColumns(4);
 			
 			xAxisAcceleration.setColumns(8);
 			xyJunctionJerk.setColumns(4);
@@ -459,11 +457,11 @@ public class MachineOnboardParameters extends JPanel {
 			bAxisAcceleration.setColumns(8);
 			bJunctionJerk.setColumns(4);
 
+			accelerationTab.add(new JLabel("Acceleration On"));
+			accelerationTab.add(accelerationBox, "spanx, wrap");
+
 			accelerationTab.add(new JLabel("Master acceleration rate (mm/s/s)"));
 			accelerationTab.add(masterAcceleration, "spanx, wrap");
-
-			accelerationTab.add(new JLabel("Deceleration minimum speed (mm/s)"));
-			accelerationTab.add(minimumPlannerSpeed, "spanx, wrap");
 			
 			accelerationTab.add(new JLabel("X acceleration rate (mm/s/s)"));
 			accelerationTab.add(xAxisAcceleration);

@@ -190,15 +190,15 @@ public class Sanguino3GDriver extends SerialDriver implements
 			}
 		}
 		
-		boolean stepsPerMMMatched = checkEepromStepsPerMM();
-		if (!stepsPerMMMatched) {
-			int n = JOptionPane.showConfirmDialog(null, "The motherboard's stored steps/mm settings\ndon't match the selected machine profile.\nWould you like to update the motherboard\nsettings to match the profile and close the connection?\n", "Steps/mm mismatch", JOptionPane.YES_NO_OPTION);
-			if (n == JOptionPane.YES_OPTION) {
-				setEepromStepsPerMM();
-				reset(/*reconnect*/ false);
-				return false;
-			}
-		}
+		// boolean stepsPerMMMatched = checkEepromStepsPerMM();
+		// if (!stepsPerMMMatched) {
+		// 	int n = JOptionPane.showConfirmDialog(null, "The motherboard's stored steps/mm settings\ndon't match the selected machine profile.\nWould you like to update the motherboard\nsettings to match the profile and close the connection?\n", "Steps/mm mismatch", JOptionPane.YES_NO_OPTION);
+		// 	if (n == JOptionPane.YES_OPTION) {
+		// 		setEepromStepsPerMM();
+		// 		reset(/*reconnect*/ false);
+		// 		return false;
+		// 	}
+		// }
 		
 		return true;
 	}
@@ -2290,18 +2290,6 @@ public class Sanguino3GDriver extends SerialDriver implements
         }
         
         @Override
-        public int getAccelerationRate(){
-            Base.logger.info("Cannot get acceleration rate for S3G driver");
-            return 0;
-        }
-        
-        @Override
-        public void setAccelerationRate(int rate){
-            Base.logger.info("Cannot set acceleration rate for S3G driver");
-
-        }
-        
-        @Override
         public boolean getAccelerationStatus(){
             Base.logger.info("Cannot get acceleration status for S3G driver");
             return false;
@@ -2311,10 +2299,7 @@ public class Sanguino3GDriver extends SerialDriver implements
         public void setAccelerationStatus(byte status){
             Base.logger.info("Cannot set acceleration status for S3G driver");
         }
-        
-        @Override
-	public boolean hasAcceleration() { return false;}
-   
+          
 
 	public void storeHomePositions(EnumSet<AxisId> axes) throws RetryException {
 		byte b = 0;
@@ -2376,7 +2361,7 @@ public class Sanguino3GDriver extends SerialDriver implements
 	 * Returns true of the current firmware supports acceleration.
 	 * FIXME FIXME FIXME FIXME FIXME FIXME FIXME FIXME
 	 */
-	public boolean hasAccelerationSupport() {
+	public boolean hasAcceleration() {
 		return true;
 	}
 
@@ -2446,38 +2431,38 @@ public class Sanguino3GDriver extends SerialDriver implements
 		checkEEPROM();
 		writeToEEPROM(Sanguino3GEEPRPOM.EEPROM_ACCELERATION_RATE_OFFSET, intToLE(acceleration));
 	}
-
-	/**
-	 * Checks that the StepsPerMM EEPROM settings on the motherboard matches those in the machine profile.
-	 * StepsPerMM are stored in fixed-point Q16 (top 16 bits are integert, bottom 16 are fractional).
-	 */
-	public boolean checkEepromStepsPerMM() {
-		checkEEPROM();
-		byte[] r = readFromEEPROM(
-				Sanguino3GEEPRPOM.EEPROM_STEPS_PER_MM_OFFSET, 20);
-
-		Point5d stepsPerMM = getMachine().getStepsPerMM();
-		for (int axis = 0; axis < 5; axis++) {
-			byte[] check = floatTo32LE((float)stepsPerMM.get(axis));
-			for (int i = 0; i < 4; i++) {
-				if (r[i+(axis * 4)] != check[i])
-					return false;
-			}
-		}
-		return true;
-	}
-
-	/**
-	 * Writes the StepsPerMM from the machine profile to the EEPROM settings on the motherboard.
-	 * StepsPerMM are stored in fixed-point Q16 (top 16 bits are integert, bottom 16 are fractional).
-	 */
-	public void setEepromStepsPerMM() {
-		Point5d stepsPerMM = getMachine().getStepsPerMM();
-		for (int axis = 0; axis < 5; axis++) {
-			float val = (float)stepsPerMM.get(axis);
-			writeToEEPROM(Sanguino3GEEPRPOM.EEPROM_STEPS_PER_MM_OFFSET + (axis * 4), floatTo32LE(val));
-		}
-	}
+	// 
+	// /**
+	//  * Checks that the StepsPerMM EEPROM settings on the motherboard matches those in the machine profile.
+	//  * StepsPerMM are stored in fixed-point Q16 (top 16 bits are integert, bottom 16 are fractional).
+	//  */
+	// public boolean checkEepromStepsPerMM() {
+	// 	checkEEPROM();
+	// 	byte[] r = readFromEEPROM(
+	// 			Sanguino3GEEPRPOM.EEPROM_STEPS_PER_MM_OFFSET, 20);
+	// 
+	// 	Point5d stepsPerMM = getMachine().getStepsPerMM();
+	// 	for (int axis = 0; axis < 5; axis++) {
+	// 		byte[] check = floatTo32LE((float)stepsPerMM.get(axis));
+	// 		for (int i = 0; i < 4; i++) {
+	// 			if (r[i+(axis * 4)] != check[i])
+	// 				return false;
+	// 		}
+	// 	}
+	// 	return true;
+	// }
+	// 
+	// /**
+	//  * Writes the StepsPerMM from the machine profile to the EEPROM settings on the motherboard.
+	//  * StepsPerMM are stored in fixed-point Q16 (top 16 bits are integert, bottom 16 are fractional).
+	//  */
+	// public void setEepromStepsPerMM() {
+	// 	Point5d stepsPerMM = getMachine().getStepsPerMM();
+	// 	for (int axis = 0; axis < 5; axis++) {
+	// 		float val = (float)stepsPerMM.get(axis);
+	// 		writeToEEPROM(Sanguino3GEEPRPOM.EEPROM_STEPS_PER_MM_OFFSET + (axis * 4), floatTo32LE(val));
+	// 	}
+	// }
 
 	/**
 	 * Reads the junction jerk values from the EEPROM settings on the motherboard and returns a Point5d.
@@ -2671,6 +2656,21 @@ public class Sanguino3GDriver extends SerialDriver implements
 	}
 	protected float byte32LEToFloat(byte[] r) {
 		return byte32LEToFloat(r, 0);
+	}
+
+	// This converts a float to a 32-bit (4-byte), litte-endien array.
+	// 16-bits are used for the integer part, and 16-bits are for the fractional part.
+	protected byte[] floatTo16LE(float f) {
+		double d = f;
+		int q16 = (int)Math.floor(d * 255.0);
+		return intToLE(q16, 2);
+	}
+
+	protected float byte16LEToFloat(byte[] r, int offset) {
+		return (float)(byteToInt(r[offset+1]) | byteToInt(r[offset])<<8)/255.0f;
+	}
+	protected float byte16LEToFloat(byte[] r) {
+		return byte16LEToFloat(r, 0);
 	}
 
 	protected byte[] intToLE(int s) {
